@@ -1,76 +1,134 @@
 # Codex Superpower
 
 <p align="center">
-  <img src="./assets/fx-studio-ai.png" alt="FX Studio AI" width="420" />
+  <img src="./assets/fx-studio-ai.png" alt="FX Studio AI" width="460" />
+</p>
+
+<p align="center"><strong>Professional Superpowers workflow adaptation for Codex</strong></p>
+
+<p align="center">
+  Codex-focused distribution of the original
+  <a href="https://github.com/obra/superpowers">Superpowers</a>
+  methodology, packaged with plugin assets, workflow hooks, and a local read-only diagnostics MCP.
 </p>
 
 <p align="center">
-  Codex-only adaptation of the original <a href="https://github.com/obra/superpowers">Superpowers</a> workflow.
+  <img alt="Target Codex" src="https://img.shields.io/badge/Target-Codex-0A84FF?style=flat-square" />
+  <img alt="Transport stdio" src="https://img.shields.io/badge/MCP-stdio-101828?style=flat-square" />
+  <img alt="Diagnostics Read Only" src="https://img.shields.io/badge/Diagnostics-read--only-12B76A?style=flat-square" />
+  <img alt="License MIT" src="https://img.shields.io/badge/License-MIT-F79009?style=flat-square" />
 </p>
 
-## Overview
+## Executive Summary
 
-This repository contains only the Codex plugin bundle and the Codex global support files needed to run the workflow the same way it runs in my own environment.
+This repository packages the Codex-native version of the Superpowers workflow with a clear and honest scope:
 
-It is not intended to replace or rebrand the upstream project. The purpose is to adapt the original Claude-oriented Superpowers workflow to Codex while preserving the same structure, discipline, and operating model:
+- a Codex plugin bundle under `.codex-plugin/`
+- native skill and hook assets for the workflow
+- a real local diagnostics MCP registered through `.mcp.json`
+- test coverage for manifests, diagnostics behavior, and published integration wiring
+
+This version does not ship any external app surface. The real integration surface for this release is the local read-only diagnostic MCP.
+
+## Why This Repository Exists
+
+The goal is not to replace or rebrand the upstream project. The goal is to adapt the original Superpowers operating model to Codex while preserving the discipline that makes the workflow valuable:
 
 - brainstorming before implementation
-- spec approval before plan writing
-- writing-plans before code changes
-- execution with gates, reviews, and checkpoints
+- explicit specs before execution
+- written plans before code changes
+- multi-agent execution with review checkpoints
 - verification before completion
 
-## Attribution
+## Highlights In This Version
 
-- Original upstream project: [obra/superpowers](https://github.com/obra/superpowers)
-- Original creator: Jesse Vincent
-- Original organization: Prime Radiant
-- Codex adaptation, global integration, hook enforcement, and workflow port: Fernando Xavier - FX Studio AI
+- Local diagnostic MCP published through [`.mcp.json`](./.mcp.json)
+- Read-only diagnostics contract implemented in [`scripts/mcp/`](./scripts/mcp)
+- Plugin manifest aligned to real behavior in [`.codex-plugin/plugin.json`](./.codex-plugin/plugin.json)
+- Documentation updated to remove unused external app promises
+- Published config snippet cleaned up to remove `collab = true`
+- Targeted MCP test coverage in [`tests/mcp/`](./tests/mcp)
 
-This repository intentionally preserves the recognizable shape of the original workflow so users can benefit from the upstream methodology on Codex without losing the attribution to the original work.
+## What Is Included
 
-## What This Repository Contains
-
-This is a Codex-focused distribution. It contains:
-
-- `.codex-plugin/` with the Codex plugin manifest
-- `skills/` with the active skill set
-- `hooks/` with the enforcement hooks used by the workflow
-- `commands/` and `agents/` with Codex-facing entrypoints
-- `tests/` with the gate validation tests
-- `codex-global/` with the global Codex assets and installation references used to mirror the same behavior across projects
-- `assets/` with branding and UI assets used by the plugin bundle
-
-This repository ships only the Codex plugin and the Codex-specific supporting assets users need to install and use it consistently.
-
-It does not ship compatibility folders for Claude, Cursor, Gemini, OpenCode, or any other IDE/runtime.
+| Area | Purpose |
+| --- | --- |
+| [`.codex-plugin/`](./.codex-plugin) | Codex plugin manifest and bundle metadata |
+| [`skills/`](./skills) | Active Superpowers skills used by Codex |
+| [`hooks/`](./hooks) | Workflow enforcement hooks |
+| [`commands/`](./commands) | Codex command entrypoints |
+| [`agents/`](./agents) | Agent-facing bundle assets |
+| [`scripts/mcp/`](./scripts/mcp) | Local diagnostics MCP implementation |
+| [`tests/`](./tests) | Validation for manifests, MCP logic, and integration wiring |
+| [`codex-global/`](./codex-global) | Global support assets and install references |
+| [`docs/`](./docs) | Codex-facing documentation and approved implementation records |
 
 ## Scope Boundary
 
-The marketplace plugin and the local Codex pipeline are intentionally **not** the same thing.
+This repository is intentionally strict about its public contract.
 
-**The plugin marketplace scope covers:**
+**Included in scope**
 
-- design discovery and clarification
-- written specs
-- written implementation plans
-- execution handoff
-- plan execution discipline
-- verification before completion
+- Codex workflow assets
+- local diagnostics MCP
+- installation guidance for native skill discovery
+- tests that validate the published contract
 
-**The local Codex pipeline scope covers:**
+**Out of scope in this version**
 
-- heavy orchestration such as `task-orchestrator`
-- adaptive batch execution
-- adversarial per-batch review gates
-- sanity-checker and final validator style closure
-- Go/No-Go style pipeline decisions
+- external app integration via `.app.json`
+- marketplace claims for capabilities that are not actually wired
+- write-capable MCP operations
 
-The plugin should be rigorous within its own scope, but it should not claim to be the full local pipeline.
+The bundle itself still contains interactive and write-capable workflows through skills, hooks, and execution patterns. The **MCP surface only** is read-only.
 
-## Workflow Summary
+## Quick Start
 
-The adapted workflow keeps the same core structure as the original Superpowers system:
+1. Clone this repository to your canonical local plugin location, for example `~/plugins/superpowers-codex-global`.
+2. Point `~/.agents/skills/superpowers` to this repository's [`skills/`](./skills) directory.
+3. Restart Codex so native skill discovery reloads the bundle.
+4. If needed, enable multi-agent support with the snippet in [`codex-global/config/hooks-snippet.toml`](./codex-global/config/hooks-snippet.toml).
+5. Use the repo-local diagnostics MCP exposed by [`.mcp.json`](./.mcp.json) when working inside this workspace.
+
+Detailed installation guidance lives in [`.codex/INSTALL.md`](./.codex/INSTALL.md) and [docs/README.codex.md](./docs/README.codex.md).
+
+## Diagnostics MCP
+
+The diagnostics service is implemented as a **local stdio MCP** and is intentionally narrow:
+
+- server name: `superpowers-codex-diagnostics`
+- transport: `stdio`
+- contract: read-only diagnostics
+- entrypoint: [`scripts/mcp/superpowers-codex-diagnostics.mjs`](./scripts/mcp/superpowers-codex-diagnostics.mjs)
+
+Core diagnostics tools include:
+
+- `bundle_metadata`
+- `inspect_bundle`
+- `inspect_installation`
+- `inspect_hooks`
+- `inspect_config`
+- `doctor`
+
+This MCP is for bundle diagnostics only. It is not an app integration layer and does not expose write operations.
+
+## Validation
+
+The repository includes targeted automated checks for the published contract:
+
+- manifest and documentation expectations
+- diagnostics tool behavior
+- integration wiring derived from [`.mcp.json`](./.mcp.json)
+
+Primary validation suite:
+
+```bash
+node --test tests/mcp/superpowers-codex-manifests.test.mjs tests/mcp/superpowers-codex-diagnostics.test.mjs tests/mcp/superpowers-codex-diagnostics-integration.test.mjs
+```
+
+## Workflow Shape
+
+The Codex adaptation preserves the recognizable structure of the original Superpowers workflow:
 
 1. `brainstorming`
 2. `writing-plans`
@@ -79,54 +137,18 @@ The adapted workflow keeps the same core structure as the original Superpowers s
 5. `verification-before-completion`
 6. `finishing-a-development-branch`
 
-In the Codex adaptation, this flow is reinforced with hooks and stateful gates so planning, writing-plans, execution, and pipeline behavior remain explicit and auditable.
+That workflow is reinforced here with hooks, docs, and validation assets so planning and execution stay explicit and reviewable.
 
-Within the plugin bundle itself, the intended scope is:
+## Attribution
 
-- `brainstorming` for design discovery, clarification, and written specs
-- `writing-plans` for detailed written implementation plans and explicit execution handoff
-- `subagent-driven-development` or `executing-plans` for plan execution within skill-defined checkpoints
-- `requesting-code-review` for independent code review during implementation
-- `verification-before-completion` for evidence-based completion claims
+This project builds on the upstream Superpowers methodology and preserves clear attribution:
 
-Heavy pipeline orchestration is intentionally left to the local Codex pipeline assets and should not be treated as part of the marketplace plugin contract.
-
-## Installation For Codex
-
-Use the Codex plugin bundle in this repository together with the Codex global assets in `codex-global/`.
-
-Main plugin manifest:
-
-- [`.codex-plugin/plugin.json`](./.codex-plugin/plugin.json)
-
-Primary runtime folders:
-
-- [`skills/`](./skills)
-- [`hooks/`](./hooks)
-- [`commands/`](./commands)
-- [`agents/`](./agents)
-- [`codex-global/`](./codex-global)
-
-Codex-focused docs:
-
-- [`docs/README.codex.md`](./docs/README.codex.md)
-- [`codex-global/config/hooks-snippet.toml`](./codex-global/config/hooks-snippet.toml)
-
-## Validation
-
-The repository includes gate tests for the main workflow states, including:
-
-- planning mode
-- writing-plans mode
-- execution choice mode
-- execution mode
-- pipeline mode for the local Codex integration surface, not as a statement that the marketplace plugin itself implements the full pipeline contract
-
-These tests live under [`tests/`](./tests).
+- Upstream repository: [obra/superpowers](https://github.com/obra/superpowers)
+- Original creator: Jesse Vincent
+- Original organization: Prime Radiant
+- Codex adaptation, workflow port, global integration, and diagnostics packaging: Fernando Xavier, FX Studio AI
 
 ## Community And Upstream
-
-The original Superpowers community and upstream project live at [obra/superpowers](https://github.com/obra/superpowers).
 
 - Upstream issues: [github.com/obra/superpowers/issues](https://github.com/obra/superpowers/issues)
 - Upstream marketplace: [github.com/obra/superpowers-marketplace](https://github.com/obra/superpowers-marketplace)

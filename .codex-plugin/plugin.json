@@ -1,6 +1,6 @@
 {
   "name": "superpowers-codex-global",
-  "version": "5.0.8",
+  "version": "5.0.9",
   "description": "Codex-native Superpowers skills bundle with global assets, hooks, and workflow docs.",
   "author": {
     "name": "Fernando Xavier - FX Studio AI",
@@ -21,7 +21,6 @@
   "skills": "./skills/",
   "hooks": "./hooks/hooks.json",
   "mcpServers": "./.mcp.json",
-  "apps": "./.app.json",
   "interface": {
     "displayName": "Superpowers Codex Global",
     "shortDescription": "Codex-native Superpowers skills bundle",

@@ -1,3 +1,12 @@
 {
-  "mcpServers": {}
+  "mcpServers": {
+    "superpowers-codex-diagnostics": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "./scripts/mcp/superpowers-codex-diagnostics.mjs"
+      ],
+      "note": "Local read-only diagnostics MCP for the Superpowers Codex bundle."
+    }
+  }
 }

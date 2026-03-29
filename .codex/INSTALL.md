@@ -4,7 +4,10 @@ Enable the local `superpowers-codex-global` bundle in Codex via native skill dis
 
 ## Prerequisites
 
-- A local canonical bundle at `C:\Users\win\plugins\superpowers-codex-global`
+- A local canonical bundle at `~/plugins/superpowers-codex-global`
+
+These instructions assume the canonical bundle is checked out at
+`~/plugins/superpowers-codex-global`.
 
 ## Installation
 
@@ -27,6 +30,16 @@ Enable the local `superpowers-codex-global` bundle in Codex via native skill dis
    [features]
    multi_agent = true
    ```
+
+## Diagnostic MCP
+
+The bundle includes a local read-only diagnostic MCP registered through `.mcp.json`.
+It is the repository-local integration surface used for Superpowers Codex
+diagnostics in this release.
+It is repo-local only and is available when Codex is running in a workspace
+that loads this repository's `.mcp.json`.
+The MCP surface is read-only, while the broader plugin bundle still includes
+interactive and write-capable workflows through its skills and hooks.
 
 ## Migrating from old bootstrap
 

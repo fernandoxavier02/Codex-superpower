@@ -9,7 +9,7 @@ Codex adaptation by Fernando Xavier - FX Studio AI.
 Tell Codex:
 
 ```
-Follow the install instructions from `C:\Users\win\plugins\superpowers-codex-global\.codex\INSTALL.md`
+Follow the install instructions from `~/plugins/superpowers-codex-global/.codex/INSTALL.md`
 ```
 
 ## Manual Installation
@@ -17,7 +17,10 @@ Follow the install instructions from `C:\Users\win\plugins\superpowers-codex-glo
 ### Prerequisites
 
 - Codex
-- A local canonical bundle at `C:\Users\win\plugins\superpowers-codex-global`
+- A local canonical bundle at `~/plugins/superpowers-codex-global`
+
+These instructions assume the canonical bundle is checked out at
+`~/plugins/superpowers-codex-global`.
 
 ### Steps
 
@@ -60,6 +63,18 @@ Codex has native skill discovery — it scans `~/.agents/skills/` at startup, pa
 ```
 
 The `using-superpowers` skill is discovered automatically and enforces skill usage discipline — no additional configuration needed.
+
+## Diagnostic MCP
+
+This bundle now ships a local read-only diagnostic MCP entrypoint through
+`.mcp.json`. It is the repository-local integration surface reserved for
+Superpowers Codex diagnostics in this release.
+
+It does not repair the environment automatically in this version.
+It is repo-local only and is available when Codex is running in a workspace
+that loads this repository's `.mcp.json`.
+The MCP surface is read-only, while the broader plugin bundle still includes
+interactive and write-capable workflows through its skills and hooks.
 
 ## Usage
 
@@ -136,4 +151,4 @@ Junctions normally work without special permissions. If creation fails, try runn
 ## Getting Help
 
 - Report issues: https://github.com/obra/superpowers/issues
-- Canonical local bundle: `C:\Users\win\plugins\superpowers-codex-global`
+- Canonical local bundle: `~/plugins/superpowers-codex-global`

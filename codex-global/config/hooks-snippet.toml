@@ -1,7 +1,6 @@
 [features]
 multi_agent = true
 skills = true
-collab = true
 steer = true
 
 # Hook registrations required by the global Superpowers Codex stack

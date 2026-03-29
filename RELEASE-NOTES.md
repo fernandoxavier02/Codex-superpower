@@ -1,5 +1,14 @@
 # Superpowers Release Notes
 
+## v5.0.9 (2026-03-29)
+
+### Superpowers Codex Diagnostic MCP
+
+- replaced the empty `.mcp.json` stub with a real local diagnostic MCP registration
+- removed unused app-integration advertising from the shipped plugin contract
+- updated installation and README docs to describe the read-only diagnostics flow
+- removed stale `collab = true` guidance from the published Codex config snippet
+
 ## v5.0.8 (2026-03-29)
 
 ### Codex-Only Packaging Cleanup
