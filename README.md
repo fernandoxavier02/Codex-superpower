@@ -84,13 +84,49 @@ The bundle itself still contains interactive and write-capable workflows through
 
 ## Quick Start
 
-1. Clone this repository to your canonical local plugin location, for example `~/plugins/superpowers-codex-global`.
-2. Point `~/.agents/skills/superpowers` to this repository's [`skills/`](./skills) directory.
-3. Restart Codex so native skill discovery reloads the bundle.
-4. If needed, enable multi-agent support with the snippet in [`codex-global/config/hooks-snippet.toml`](./codex-global/config/hooks-snippet.toml).
-5. Use the repo-local diagnostics MCP exposed by [`.mcp.json`](./.mcp.json) when working inside this workspace.
+Choose one of the two supported installation paths:
+
+1. **Marketplace-local install**
+   Register the plugin in your home-local Codex marketplace and point it at a local checkout in `~/plugins/superpowers-codex-global`.
+2. **Manual clone install**
+   Clone the repository, create the native skills link, restart Codex, and use the bundle directly from the checkout.
+
+For most users, the best route is:
+
+1. Clone this repository to `~/plugins/superpowers-codex-global`.
+2. Register or update the local marketplace entry in `~/.agents/plugins/marketplace.json`.
+3. Point `~/.agents/skills/superpowers` to this repository's [`skills/`](./skills) directory.
+4. Restart Codex so native skill discovery reloads the bundle.
+5. If needed, enable multi-agent support with the snippet in [`codex-global/config/hooks-snippet.toml`](./codex-global/config/hooks-snippet.toml).
+6. Use the repo-local diagnostics MCP exposed by [`.mcp.json`](./.mcp.json) when working inside this workspace.
 
 Detailed installation guidance lives in [`.codex/INSTALL.md`](./.codex/INSTALL.md) and [docs/README.codex.md](./docs/README.codex.md).
+
+## Installation Paths
+
+### Option A: Marketplace-Local Install
+
+Codex supports a **home-local marketplace** file at `~/.agents/plugins/marketplace.json`.
+This is not a remote public marketplace. It is a machine-local catalog that can point to plugins stored under `~/plugins/`.
+
+For this plugin, the marketplace entry should point to:
+
+- plugin name: `superpowers-codex-global`
+- source path: `./plugins/superpowers-codex-global`
+- installation policy: `AVAILABLE`
+- authentication policy: `ON_INSTALL`
+
+This route is ideal if you want the plugin to appear in the Codex marketplace UI on your machine while still being backed by a local checkout you control.
+
+### Option B: Manual Clone Install
+
+If you do not want to use the marketplace-local route, you can still install the bundle manually:
+
+- clone the repository into `~/plugins/superpowers-codex-global`
+- point `~/.agents/skills/superpowers` at the bundle's `skills/` directory
+- restart Codex
+
+Both routes use the same local checkout and the same repo-local only diagnostic MCP.
 
 ## Diagnostics MCP
 
@@ -125,6 +161,13 @@ Primary validation suite:
 ```bash
 node --test tests/mcp/superpowers-codex-manifests.test.mjs tests/mcp/superpowers-codex-diagnostics.test.mjs tests/mcp/superpowers-codex-diagnostics-integration.test.mjs
 ```
+
+Installation is considered successful when:
+
+- Codex can discover the `superpowers` skills namespace
+- the bundle is present in your local marketplace, if you chose that route
+- the repo-local diagnostic MCP is available inside this workspace
+- the diagnostics bundle reports the expected assets and configuration
 
 ## Workflow Shape
 
