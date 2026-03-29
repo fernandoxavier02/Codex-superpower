@@ -1,0 +1,18 @@
+[features]
+multi_agent = true
+skills = true
+collab = true
+steer = true
+
+# Hook registrations required by the global Superpowers Codex stack
+require-orchestrator-decision = "~/.codex/hooks/require-orchestrator-decision.cjs"
+activate-writing-plans-mode = "~/.codex/hooks/activate-writing-plans-mode.cjs"
+activate-execution-choice-mode = "~/.codex/hooks/activate-execution-choice-mode.cjs"
+activate-plan-mode = "~/.codex/hooks/activate-plan-mode.cjs"
+require-planning-checklist = "~/.codex/hooks/require-planning-checklist.cjs"
+require-writing-plans-checklist = "~/.codex/hooks/require-writing-plans-checklist.cjs"
+require-execution-choice-resolution = "~/.codex/hooks/require-execution-choice-resolution.cjs"
+activate-execution-mode = "~/.codex/hooks/activate-execution-mode.cjs"
+require-execution-checklist = "~/.codex/hooks/require-execution-checklist.cjs"
+force-pipeline-agents = "~/.codex/hooks/force-pipeline-agents.cjs"
+require-pipeline-checklist = "~/.codex/hooks/require-pipeline-checklist.cjs"

@@ -1,0 +1,20 @@
+{
+  "name": "win-local-plugins",
+  "interface": {
+    "displayName": "Win Local Plugins"
+  },
+  "plugins": [
+    {
+      "name": "superpowers-codex-global",
+      "source": {
+        "source": "local",
+        "path": "./plugins/superpowers-codex-global"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "name": "superpowers-codex-global",
+  "version": "5.0.6",
+  "description": "Codex-native Superpowers skills bundle with global assets, hooks, and workflow docs.",
+  "author": {
+    "name": "Fernando Xavier - FX Studio AI",
+    "email": "",
+    "url": ""
+  },
+  "homepage": "https://github.com/obra/superpowers",
+  "repository": "https://github.com/obra/superpowers",
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "codex",
+    "tdd",
+    "debugging",
+    "collaboration",
+    "workflows"
+  ],
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.json",
+  "mcpServers": "./.mcp.json",
+  "apps": "./.app.json",
+  "interface": {
+    "displayName": "Superpowers Codex Global",
+    "shortDescription": "Codex-native Superpowers skills bundle",
+    "longDescription": "Canonical Codex bundle for Superpowers, with Codex adaptation by Fernando Xavier - FX Studio AI.",
+    "developerName": "Fernando Xavier - FX Studio AI",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/obra/superpowers",
+    "privacyPolicyURL": "https://github.com/obra/superpowers/blob/main/README.md",
+    "termsOfServiceURL": "https://github.com/obra/superpowers/blob/main/LICENSE",
+    "defaultPrompt": [
+      "Help me brainstorm the feature before writing code.",
+      "Turn the approved design into a concise implementation plan.",
+      "Execute the plan with the appropriate Superpowers workflow."
+    ],
+    "brandColor": "#0F766E",
+    "composerIcon": "./codex-global/icon.svg",
+    "logo": "./codex-global/logo.svg",
+    "screenshots": []
+  }
+}
