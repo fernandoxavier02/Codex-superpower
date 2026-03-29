@@ -1,4 +1,12 @@
-# Superpowers
+# Codex Superpower
+
+This repository is a Codex adaptation of the original [Superpowers](https://github.com/obra/superpowers) project for Claude Code.
+
+The goal here is not to replace or rebrand the original work. It is to preserve the same workflow structure, skills philosophy, and overall operating model from the Claude plugin, while adapting the runtime, hooks, commands, and global wiring so the system behaves correctly inside Codex.
+
+Original Superpowers for Claude was created by Jesse Vincent and the team at Prime Radiant. The Codex adaptation, global integration, hook enforcement, and workflow-porting work in this repository were implemented by Fernando Xavier at FX Studio AI.
+
+## About Superpowers
 
 Superpowers is a complete software development workflow for your coding agents, built on top of a set of composable "skills" and some initial instructions that make sure your agent uses them.
 
@@ -15,11 +23,14 @@ Next up, once you say "go", it launches a *subagent-driven-development* process,
 There's a bunch more to it, but that's the core of the system. And because the skills trigger automatically, you don't need to do anything special. Your coding agent just has Superpowers.
 
 
-## Sponsorship
+## Attribution
 
-If this Codex bundle has helped your team ship faster, please keep the attribution to the Codex adaptation intact.
+- Original project: [obra/superpowers](https://github.com/obra/superpowers)
+- Original creator: Jesse Vincent
+- Original organization: Prime Radiant
+- Codex adaptation and global integration: Fernando Xavier - FX Studio AI
 
-Codex adaptation by Fernando Xavier - FX Studio AI.
+This repository intentionally keeps the upstream structure recognizable so teams can benefit from the original Superpowers methodology on Codex without obscuring where the system came from.
 
 
 ## Installation
@@ -174,12 +185,13 @@ MIT License - see LICENSE file for details
 
 ## Community
 
-This Codex bundle credits the Codex adaptation to Fernando Xavier - FX Studio AI.
+The original Superpowers community and upstream project live at [obra/superpowers](https://github.com/obra/superpowers).
 
-For community support, questions, and sharing what you're building with Superpowers, join us on [Discord](https://discord.gg/Jd8Vphy9jq).
+For community support, questions, and sharing what you're building with Superpowers, join the upstream [Discord](https://discord.gg/Jd8Vphy9jq).
 
 ## Support
 
-- **Discord**: [Join us on Discord](https://discord.gg/Jd8Vphy9jq)
-- **Issues**: https://github.com/obra/superpowers/issues
-- **Marketplace**: https://github.com/obra/superpowers-marketplace
+- **Original upstream project**: [obra/superpowers](https://github.com/obra/superpowers)
+- **Original upstream issues**: [github.com/obra/superpowers/issues](https://github.com/obra/superpowers/issues)
+- **Original marketplace**: [github.com/obra/superpowers-marketplace](https://github.com/obra/superpowers-marketplace)
+- **Codex adaptation maintainer**: Fernando Xavier - FX Studio AI
