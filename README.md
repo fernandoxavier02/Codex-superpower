@@ -95,10 +95,9 @@ For most users, the best route is:
 
 1. Clone this repository to `~/plugins/superpowers-codex-global`.
 2. Register or update the local marketplace entry in `~/.agents/plugins/marketplace.json`.
-3. Point `~/.agents/skills/superpowers` to this repository's [`skills/`](./skills) directory.
-4. Restart Codex so native skill discovery reloads the bundle.
-5. If needed, enable multi-agent support with the snippet in [`codex-global/config/hooks-snippet.toml`](./codex-global/config/hooks-snippet.toml).
-6. Use the repo-local diagnostics MCP exposed by [`.mcp.json`](./.mcp.json) when working inside this workspace.
+3. Restart Codex so it reloads the local marketplace and the plugin manifest.
+4. If needed, enable multi-agent support with the snippet in [`codex-global/config/hooks-snippet.toml`](./codex-global/config/hooks-snippet.toml).
+5. Use the repo-local diagnostics MCP exposed by [`.mcp.json`](./.mcp.json) when working inside this workspace.
 
 Detailed installation guidance lives in [`.codex/INSTALL.md`](./.codex/INSTALL.md) and [docs/README.codex.md](./docs/README.codex.md).
 
@@ -116,6 +115,10 @@ For this plugin, the marketplace entry should point to:
 - installation policy: `AVAILABLE`
 - authentication policy: `ON_INSTALL`
 
+When installed this way, Codex reads the plugin manifest and loads the bundle's
+declared `skills`, `hooks`, and `mcpServers` from the local checkout.
+You do **not** need a separate `~/.agents/skills/superpowers` symlink for this route.
+
 This route is ideal if you want the plugin to appear in the Codex marketplace UI on your machine while still being backed by a local checkout you control.
 
 ### Option B: Manual Clone Install
@@ -126,7 +129,7 @@ If you do not want to use the marketplace-local route, you can still install the
 - point `~/.agents/skills/superpowers` at the bundle's `skills/` directory
 - restart Codex
 
-Both routes use the same local checkout and the same repo-local only diagnostic MCP.
+Both routes use the same local checkout and the same repo-local only diagnostic MCP, but only the manual route depends on the explicit skills symlink/junction.
 
 ## Diagnostics MCP
 
@@ -164,8 +167,8 @@ node --test tests/mcp/superpowers-codex-manifests.test.mjs tests/mcp/superpowers
 
 Installation is considered successful when:
 
-- Codex can discover the `superpowers` skills namespace
 - the bundle is present in your local marketplace, if you chose that route
+- Codex can discover the plugin-provided skills, or the `superpowers` skills namespace in manual mode
 - the repo-local diagnostic MCP is available inside this workspace
 - the diagnostics bundle reports the expected assets and configuration
 

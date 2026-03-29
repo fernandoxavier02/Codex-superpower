@@ -17,11 +17,17 @@ Both models still rely on a local checkout at `~/plugins/superpowers-codex-globa
 
 ## Quick Install
 
-Tell Codex:
+From GitHub, the shortest path is:
 
+```bash
+mkdir -p ~/plugins
+git clone https://github.com/fernandoxavier02/Codex-superpower.git ~/plugins/superpowers-codex-global
 ```
-Follow the install instructions from `~/plugins/superpowers-codex-global/.codex/INSTALL.md`
-```
+
+Then choose one:
+
+- marketplace-local: add the plugin to `~/.agents/plugins/marketplace.json` and restart Codex
+- manual clone: create `~/.agents/skills/superpowers` pointing to `~/plugins/superpowers-codex-global/skills` and restart Codex
 
 ## Manual Installation
 
@@ -52,7 +58,9 @@ These instructions assume the canonical bundle is checked out at
    ./plugins/superpowers-codex-global
    ```
 
-3. Create the skills symlink:
+   In this mode, Codex can load the bundle from the plugin manifest, so you do not need a separate skills symlink.
+
+3. If you are using the manual route instead of the marketplace-local route, create the skills symlink:
    ```bash
    mkdir -p ~/.agents/skills
    ln -s ~/plugins/superpowers-codex-global/skills ~/.agents/skills/superpowers
@@ -70,7 +78,13 @@ These instructions assume the canonical bundle is checked out at
 
 ### Windows
 
-Use a junction instead of a symlink (works without Developer Mode):
+For the marketplace-local route, create the marketplace parent folder if needed:
+
+```powershell
+New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.agents\plugins"
+```
+
+For the manual route, use a junction instead of a symlink (works without Developer Mode):
 
 ```powershell
 New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.agents\skills"
@@ -79,13 +93,15 @@ cmd /c mklink /J "$env:USERPROFILE\.agents\skills\superpowers" "$env:USERPROFILE
 
 ## How It Works
 
-Codex has native skill discovery — it scans `~/.agents/skills/` at startup, parses SKILL.md frontmatter, and loads skills on demand. Superpowers skills are made visible through a single symlink:
+In marketplace-local mode, Codex can load the plugin from the local marketplace entry and the bundle manifest in `.codex-plugin/plugin.json`.
+
+In manual mode, Codex uses native skill discovery — it scans `~/.agents/skills/` at startup, parses SKILL.md frontmatter, and loads skills on demand. In that mode, Superpowers skills are made visible through a single symlink:
 
 ```
 ~/.agents/skills/superpowers/ → ~/plugins/superpowers-codex-global/skills/
 ```
 
-The `using-superpowers` skill is discovered automatically and enforces skill usage discipline — no additional configuration needed.
+The `using-superpowers` skill is then discovered automatically and enforces skill usage discipline — no additional configuration needed.
 
 ## Diagnostic MCP
 
@@ -103,10 +119,9 @@ interactive and write-capable workflows through its skills and hooks.
 
 After installation, verify these conditions:
 
-1. `~/.agents/skills/superpowers` resolves to the bundle's `skills/` directory.
-2. Codex has been restarted after the install.
-3. If you chose the marketplace-local route, `~/.agents/plugins/marketplace.json`
-   includes one `superpowers-codex-global` entry pointing to `./plugins/superpowers-codex-global`.
+1. If you chose the marketplace-local route, `~/.agents/plugins/marketplace.json` includes one `superpowers-codex-global` entry pointing to `./plugins/superpowers-codex-global`.
+2. If you chose the manual route, `~/.agents/skills/superpowers` resolves to the bundle's `skills/` directory.
+3. Codex has been restarted after the install.
 4. When inside this repository, the repo-local only diagnostic MCP is available.
 5. Skills activate when explicitly requested or when task intent matches their descriptions.
 
@@ -185,9 +200,9 @@ Optionally delete the canonical bundle: `rm -rf ~/plugins/superpowers-codex-glob
 
 ### Skills not showing up
 
-1. Verify the symlink: `ls -la ~/.agents/skills/superpowers`
-2. Check skills exist: `ls ~/plugins/superpowers-codex-global/skills`
-3. Restart Codex — skills are discovered at startup
+1. If you are using the manual route, verify the symlink: `ls -la ~/.agents/skills/superpowers`
+2. Check the bundle exists: `ls ~/plugins/superpowers-codex-global`
+3. Restart Codex
 
 ### Marketplace-local entry not appearing
 

@@ -46,6 +46,9 @@ test('docs describe MCP diagnostics and do not advertise app integration', () =>
   assert.match(installDoc, /diagnostic MCP/i);
   assert.match(rootReadme, /diagnostic MCP/i);
   assert.match(rootReadme, /does not ship any external app surface/i);
+  assert.match(rootReadme, /Marketplace-Local Install/i);
+  assert.match(installDoc, /Route A: Marketplace-Local/i);
+  assert.match(readmeCodex, /marketplace-local/i);
   assert.match(readmeCodex, /repo-local only/i);
   assert.match(installDoc, /repo-local only/i);
 

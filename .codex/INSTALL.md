@@ -48,6 +48,12 @@ Create the parent folder if it does not exist:
 mkdir -p ~/.agents/plugins
 ```
 
+**Windows (PowerShell):**
+
+```powershell
+New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.agents\plugins"
+```
+
 If you do not already have a marketplace file, create this one:
 
 ```json
@@ -77,12 +83,33 @@ If you already have a marketplace file, add or update the `superpowers-codex-glo
 entry in the `plugins` array without duplicating it.
 
 This route lets the plugin appear in the Codex marketplace UI on your machine while remaining backed by your local checkout.
+In this mode, Codex can load the bundle through the plugin manifest itself, so a separate
+`~/.agents/skills/superpowers` symlink is not required.
 
 ### Route B: Manual Install
 
-If you do not want a marketplace entry, continue using the same local checkout directly. The manual route still works fully through native skill discovery.
+If you do not want a marketplace entry, continue using the same local checkout directly.
+The manual route works through native skill discovery and does require the skills symlink or junction.
 
-## Step 3: Create The Skills Link
+## Step 3: Activate The Route
+
+### Route A: Marketplace-Local
+
+After saving `~/.agents/plugins/marketplace.json`, restart Codex.
+
+Codex should now load the plugin from:
+
+```text
+~/plugins/superpowers-codex-global
+```
+
+through the manifest in:
+
+```text
+~/plugins/superpowers-codex-global/.codex-plugin/plugin.json
+```
+
+### Route B: Manual
 
 1. **Create the skills symlink:**
    ```bash
@@ -100,7 +127,7 @@ If you do not want a marketplace entry, continue using the same local checkout d
 
 Quit and relaunch Codex so it can:
 
-- rescan `~/.agents/skills/`
+- rescan `~/.agents/skills/`, if you chose the manual route
 - reload the machine-local marketplace, if you configured it
 - pick up this bundle's repo-local only diagnostic MCP when you work in this repository
 
@@ -132,14 +159,16 @@ If you installed superpowers before native skill discovery, you need to:
 
 ## Verify The Installation
 
+If you chose the marketplace-local route, also verify that `~/.agents/plugins/marketplace.json`
+contains a single `superpowers-codex-global` entry pointing to `./plugins/superpowers-codex-global`.
+
+If you chose the manual route, verify the skills link:
+
 ```bash
 ls -la ~/.agents/skills/superpowers
 ```
 
 You should see a symlink (or junction on Windows) pointing to `~/plugins/superpowers-codex-global/skills`.
-
-If you chose the marketplace-local route, also verify that `~/.agents/plugins/marketplace.json`
-contains a single `superpowers-codex-global` entry pointing to `./plugins/superpowers-codex-global`.
 
 Inside the repository workspace, you can also validate the diagnostic MCP contract with:
 
@@ -149,8 +178,9 @@ node --test tests/mcp/superpowers-codex-manifests.test.mjs tests/mcp/superpowers
 
 Success means:
 
-- skills are discoverable
 - the marketplace entry is correct, if used
+- the plugin manifest can load the bundle in marketplace-local mode
+- skills are discoverable in manual mode
 - the bundle wiring is coherent
 - the diagnostic MCP is available and read-only
 
@@ -179,6 +209,8 @@ git pull
 ```bash
 rm ~/.agents/skills/superpowers
 ```
+
+This removal is only needed for the manual route.
 
 If you used the marketplace-local route, also remove the `superpowers-codex-global`
 entry from `~/.agents/plugins/marketplace.json`.
