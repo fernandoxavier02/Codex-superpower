@@ -1,14 +1,14 @@
 {
   "name": "superpowers-codex-global",
-  "version": "5.0.6",
+  "version": "5.0.8",
   "description": "Codex-native Superpowers skills bundle with global assets, hooks, and workflow docs.",
   "author": {
     "name": "Fernando Xavier - FX Studio AI",
     "email": "",
     "url": ""
   },
-  "homepage": "https://github.com/obra/superpowers",
-  "repository": "https://github.com/obra/superpowers",
+  "homepage": "https://github.com/fernandoxavier02/Codex-superpower",
+  "repository": "https://github.com/fernandoxavier02/Codex-superpower",
   "license": "MIT",
   "keywords": [
     "skills",
@@ -32,9 +32,9 @@
       "Interactive",
       "Write"
     ],
-    "websiteURL": "https://github.com/obra/superpowers",
-    "privacyPolicyURL": "https://github.com/obra/superpowers/blob/main/README.md",
-    "termsOfServiceURL": "https://github.com/obra/superpowers/blob/main/LICENSE",
+    "websiteURL": "https://github.com/fernandoxavier02/Codex-superpower",
+    "privacyPolicyURL": "https://github.com/fernandoxavier02/Codex-superpower/blob/main/README.md",
+    "termsOfServiceURL": "https://github.com/fernandoxavier02/Codex-superpower/blob/main/LICENSE",
     "defaultPrompt": [
       "Help me brainstorm the feature before writing code.",
       "Turn the approved design into a concise implementation plan.",

@@ -10,7 +10,7 @@
 
 ## Overview
 
-This repository contains the Codex plugin bundle and the Codex global support files needed to run the workflow the same way it runs in my own environment.
+This repository contains only the Codex plugin bundle and the Codex global support files needed to run the workflow the same way it runs in my own environment.
 
 It is not intended to replace or rebrand the upstream project. The purpose is to adapt the original Claude-oriented Superpowers workflow to Codex while preserving the same structure, discipline, and operating model:
 
@@ -41,7 +41,9 @@ This is a Codex-focused distribution. It contains:
 - `codex-global/` with the global Codex assets and installation references used to mirror the same behavior across projects
 - `assets/` with branding and UI assets used by the plugin bundle
 
-This repository is meant to ship only the Codex plugin and the Codex-specific supporting assets users need to install and use it consistently.
+This repository ships only the Codex plugin and the Codex-specific supporting assets users need to install and use it consistently.
+
+It does not ship compatibility folders for Claude, Cursor, Gemini, OpenCode, or any other IDE/runtime.
 
 ## Workflow Summary
 

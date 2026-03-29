@@ -1,5 +1,13 @@
 # Superpowers Release Notes
 
+## v5.0.8 (2026-03-29)
+
+### Codex-Only Packaging Cleanup
+
+- **Codex-only repository surface** — removed compatibility folders and files for Claude, Cursor, Gemini, and OpenCode from the published bundle so the repository now ships only what is needed for Codex
+- **Codex manifests aligned** — bumped the Codex package metadata to `v5.0.8` and pointed the Codex plugin manifest at the dedicated Codex repository URLs
+- **Root package cleanup** — removed the stale OpenCode `main` entry from `package.json` and marked the package as private to avoid suggesting a non-Codex runtime entrypoint
+
 ## v5.0.7 (2026-03-29)
 
 ### Codex Hard-Gated Pipeline Enforcement

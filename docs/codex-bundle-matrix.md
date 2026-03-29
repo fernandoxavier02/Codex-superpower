@@ -2,7 +2,7 @@
 
 ## Objective
 
-This bundle is the canonical Codex-facing packaging of Superpowers 5.0.6. It mirrors the upstream skill library where possible, adapts Codex-specific workflows and docs, and keeps global assets in one place for the bundle to reference consistently.
+This bundle is the canonical Codex-facing packaging of Superpowers 5.0.8. It mirrors the upstream skill library where possible, adapts Codex-specific workflows and docs, and keeps global assets in one place for the bundle to reference consistently.
 
 ## Matrix
 
@@ -16,6 +16,5 @@ This bundle is the canonical Codex-facing packaging of Superpowers 5.0.6. It mir
 | `skills/executing-plans` | Adapt | Plan tracking must map cleanly to Codex `update_plan`. |
 | `skills/subagent-driven-development` | Adapt | Subagent dispatch needs Codex tool mapping notes. |
 | `skills/using-superpowers/references/codex-tools.md` | Mirror | Source-of-truth mapping between Superpowers concepts and Codex tools. |
-| `.claude-plugin/`, `.cursor-plugin/`, `.opencode/` | Mirror | Keep upstream compatibility artifacts, but do not treat them as Codex-first surfaces. |
 | `codex-global/` | Add | Shared global assets for this bundle live here. |
-| Legacy placeholders | Remove later | Any leftover TODOs or placeholder URLs should not remain in the canonical bundle. |
+| Legacy placeholders | Remove | Any leftover TODOs, placeholder URLs, or non-Codex compatibility artifacts should not remain in the canonical bundle. |
