@@ -1,4 +1,4 @@
-# Codex Superpower (adapted from the origial Puglin https://github.com/obra/superpowers for Codex)
+# Codex Superpower
 
 <p align="center">
   <img src="./assets/fx-studio-ai.png" alt="FX Studio AI" width="420" />
@@ -55,6 +55,13 @@ The adapted workflow keeps the same core structure as the original Superpowers s
 6. `finishing-a-development-branch`
 
 In the Codex adaptation, this flow is reinforced with hooks and stateful gates so planning, writing-plans, execution, and pipeline behavior remain explicit and auditable.
+
+As of `v5.0.7`, the Codex bundle also hard-enforces:
+
+- approved TDD before implementation
+- explicit batch checkpoints during execution
+- adversarial review after every batch
+- sanity plus final validator before completion, commit, or push
 
 ## Installation For Codex
 

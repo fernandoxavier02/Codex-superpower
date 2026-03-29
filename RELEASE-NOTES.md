@@ -1,5 +1,16 @@
 # Superpowers Release Notes
 
+## v5.0.7 (2026-03-29)
+
+### Codex Hard-Gated Pipeline Enforcement
+
+- **Codex global hooks** — added `orchestrator-gate-engine.js` plus runtime state enforcement for `ORCHESTRATOR_DECISION`, `PIPELINE_CHECKPOINT`, and `FINAL_VALIDATOR_RESULT`
+- **Pipeline state runtime** — added `codex-global/scripts/pipeline-state.cjs` for status, reset, init, checkpoint, and final transitions against `~/.codex/hook-state/pipeline-run.json`
+- **force-pipeline-agents** — upgraded from a simple Task-tool reminder to a stateful gate that primes pending pipeline state, blocks implementation before approved TDD, and resumes phase-specific enforcement during active runs
+- **require-pipeline-checklist** — now consumes machine-checkable checkpoints from assistant responses, applies them to pipeline state automatically, and blocks completion when batches, sanity, or final validation are incomplete
+- **Codex pipeline docs** — re-anchored the Codex bundle against the active `.claude` pipeline governance while documenting the Codex-specific hard-gate delta for TDD, explicit batches, adversarial review, and final validation
+- **Bundle tests** — added engine-level coverage and updated pipeline gate integration tests for pending bootstrap state, checkpoint application, and end-to-end pipeline closure
+
 ## v5.0.6 (2026-03-24)
 
 ### Inline Self-Review Replaces Subagent Review Loops

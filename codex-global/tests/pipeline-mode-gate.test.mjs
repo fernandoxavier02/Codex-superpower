@@ -7,7 +7,7 @@ const pipelineHook = 'C:\\Users\\win\\.codex\\hooks\\force-pipeline-agents.cjs';
 const requirePipelineChecklistHook =
   'C:\\Users\\win\\.codex\\hooks\\require-pipeline-checklist.cjs';
 const pipelineCommand = 'C:\\Users\\win\\.codex\\commands\\pipeline.md';
-const pipelineStatePath = 'C:\\Users\\win\\.codex\\hook-state\\pipeline-gate.json';
+const pipelineStatePath = 'C:\\Users\\win\\.codex\\hook-state\\pipeline-run.json';
 
 function runHook(prompt) {
   const result = spawnSync(
@@ -46,8 +46,9 @@ test('slash /pipeline activates pipeline mode and stores state', () => {
 
   assert.equal(payload.continue, true);
   assert.match(payload.systemMessage, /PIPELINE DE AGENTES OBRIGATORIO/);
-  assert.match(payload.systemMessage, /Triagem automática/i);
-  assert.match(payload.systemMessage, /Closure \+ validation final/i);
+  assert.match(payload.systemMessage, /ORCHESTRATOR_DECISION/i);
+  assert.match(payload.systemMessage, /task-orchestrator/i);
+  assert.match(payload.systemMessage, /final-validator/i);
   assert.equal(fs.existsSync(pipelineStatePath), true);
 });
 
@@ -56,7 +57,8 @@ test('non-trivial implementation request activates pipeline mode', () => {
 
   assert.equal(payload.continue, true);
   assert.match(payload.systemMessage, /PIPELINE DE AGENTES OBRIGATORIO/);
-  assert.match(payload.systemMessage, /update_plan/i);
+  assert.match(payload.systemMessage, /quality-gate-router/i);
+  assert.match(payload.systemMessage, /adversarial-reviewer por batch/i);
 });
 
 test('response hook blocks pipeline response without full checklist evidence', () => {
@@ -69,7 +71,7 @@ ORCHESTRATOR_DECISION:
   severidade: "Alta"
   persona: "IMPLEMENTER"
   arquivos_provaveis: ["a"]
-  tem_spec: "Não"
+  tem_spec: "Nao"
   fluxo: ["triagem", "pipeline"]
   riscos: "..."
 `);
@@ -89,7 +91,7 @@ ORCHESTRATOR_DECISION:
   severidade: "Alta"
   persona: "IMPLEMENTER"
   arquivos_provaveis: ["a"]
-  tem_spec: "Não"
+  tem_spec: "Nao"
   fluxo: ["triagem", "confirmação", "execução", "closure"]
   riscos: "..."
 
@@ -111,7 +113,7 @@ ORCHESTRATOR_DECISION:
   severidade: "Alta"
   persona: "IMPLEMENTER"
   arquivos_provaveis: ["a"]
-  tem_spec: "Não"
+  tem_spec: "Nao"
   fluxo: ["triagem", "confirmação", "execução", "closure"]
   riscos: "..."
 
@@ -123,22 +125,22 @@ Vou manter exatamente uma fase in_progress por vez e aguardar a confirmação do
 
   const payload = runHook('sim, pode continuar');
   assert.equal(payload.continue, true);
-  assert.match(payload.systemMessage, /PIPELINE FLOW CONTINUA/);
-  assert.match(payload.systemMessage, /Proposta \+ confirmação do usuário/i);
+  assert.match(payload.systemMessage, /Estado atual do pipeline validado/i);
+  assert.match(payload.systemMessage, /quality-gate/i);
 });
 
 test('response hook clears pipeline state when pipeline is completed', () => {
   runHook('/pipeline implementar trilha de auditoria');
 
-  const result = runResponseHook(`
+  const decisionResult = runResponseHook(`
 ORCHESTRATOR_DECISION:
   solicitacao: "pipeline"
   tipo: "Feature"
   severidade: "Alta"
   persona: "IMPLEMENTER"
   arquivos_provaveis: ["a"]
-  tem_spec: "Não"
-  fluxo: ["triagem", "confirmação", "execução", "closure"]
+  tem_spec: "Nao"
+  fluxo: ["triagem", "confirmacao", "execucao", "closure"]
   riscos: "..."
 
 update_plan
@@ -147,6 +149,76 @@ update_plan
 ✔ Proposta + confirmação do usuário
 ✔ Execução em batches
 ✔ Closure + validation final
+`);
+
+  assert.equal(decisionResult.status, 0, decisionResult.stderr || decisionResult.stdout);
+
+  const qualityGate = runResponseHook(`
+${PIPELINE_CHECKLIST}
+
+PIPELINE_CHECKPOINT:
+  phase: "quality-gate"
+  status: "approved"
+  user_approved: true
+  next_phase: "pre-tester"
+`);
+
+  assert.equal(qualityGate.status, 0, qualityGate.stderr || qualityGate.stdout);
+
+  const preTester = runResponseHook(`
+${PIPELINE_CHECKLIST}
+
+PIPELINE_CHECKPOINT:
+  phase: "pre-tester"
+  status: "completed"
+  artifact_path: "tests/unit/test_pipeline_guard.py"
+  next_phase: "execution"
+`);
+
+  assert.equal(preTester.status, 0, preTester.stderr || preTester.stdout);
+
+  const execution = runResponseHook(`
+${PIPELINE_CHECKLIST}
+
+PIPELINE_CHECKPOINT:
+  phase: "execution"
+  status: "completed"
+  batch_id: "B1"
+  scope: ["codex-global/hooks/force-pipeline-agents.cjs"]
+`);
+
+  assert.equal(execution.status, 0, execution.stderr || execution.stdout);
+
+  const adversarial = runResponseHook(`
+${PIPELINE_CHECKLIST}
+
+PIPELINE_CHECKPOINT:
+  phase: "adversarial"
+  status: "completed"
+  batch_id: "B1"
+  next_phase: "sanity"
+`);
+
+  assert.equal(adversarial.status, 0, adversarial.stderr || adversarial.stdout);
+
+  const sanity = runResponseHook(`
+${PIPELINE_CHECKLIST}
+
+PIPELINE_CHECKPOINT:
+  phase: "sanity"
+  status: "completed"
+  next_phase: "final-validator"
+`);
+
+  assert.equal(sanity.status, 0, sanity.stderr || sanity.stdout);
+
+  const result = runResponseHook(`
+${PIPELINE_CHECKLIST}
+
+FINAL_VALIDATOR_RESULT:
+  status: "GO"
+  summary: "Pipeline validado"
+  user_approved: true
 
 Pipeline complete. Go/No-Go: GO. final validation complete and handing off to finishing-a-development-branch.
 `);
@@ -158,9 +230,9 @@ Pipeline complete. Go/No-Go: GO. final validation complete and handing off to fi
 test('pipeline command documents the mandatory four-phase checklist', () => {
   const content = fs.readFileSync(pipelineCommand, 'utf8');
 
-  assert.match(content, /update_plan/i);
-  assert.match(content, /Triagem automática/i);
-  assert.match(content, /Proposta \+ confirmação do usuário/i);
-  assert.match(content, /Execução em batches/i);
-  assert.match(content, /Closure \+ validation final/i);
+  assert.match(content, /PHASE 0: AUTOMATIC TRIAGE/i);
+  assert.match(content, /PHASE 1: PROPOSAL \+ CONFIRMATION/i);
+  assert.match(content, /PHASE 2: BATCH EXECUTION/i);
+  assert.match(content, /PIPELINE_CHECKPOINT/i);
+  assert.match(content, /FINAL_VALIDATOR_RESULT/i);
 });
