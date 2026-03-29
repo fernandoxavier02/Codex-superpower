@@ -26,6 +26,7 @@ const TRIVIAL_PATTERNS = [
 
 const WRITING_PLANS_COMMAND_PATTERNS = [
   /^\/writing-plans\b/i,
+  /^\/superpowers:write-plan\b/i,
 ];
 
 const WRITING_PLANS_TEXT_PATTERNS = [
@@ -41,6 +42,7 @@ const SPEC_APPROVAL_PATTERNS = [
 ];
 
 const CLEAR_WRITING_PLANS_PATTERNS = [
+  /^\/superpowers:execute-plan\b/i,
   /^\/(execute-plan|executing-plans)\b/i,
   /^(cancelar|cancel|abort(ar)?|encerrar plano|encerrar planning)\b/i,
 ];

@@ -8,7 +8,7 @@ const activateWritingPlansHook = 'C:\\Users\\win\\.codex\\hooks\\activate-writin
 const forcePipelineHook = 'C:\\Users\\win\\.codex\\hooks\\force-pipeline-agents.cjs';
 const requirePlanningChecklistHook =
   'C:\\Users\\win\\.codex\\hooks\\require-planning-checklist.cjs';
-const writePlanCommand = 'C:\\Users\\win\\.codex\\commands\\write-plan.md';
+const brainstormCommand = 'C:\\Users\\win\\plugins\\superpowers-codex-global\\commands\\brainstorm.md';
 const planningStatePath = 'C:\\Users\\win\\.codex\\hook-state\\planning-gate.json';
 const pipelineStatePath = 'C:\\Users\\win\\.codex\\hook-state\\pipeline-gate.json';
 const writingPlansStatePath = 'C:\\Users\\win\\.codex\\hook-state\\writing-plans-gate.json';
@@ -53,8 +53,8 @@ test.afterEach(() => {
   }
 });
 
-test('slash /write-plan activates plan mode message', () => {
-  const payload = runHook(activatePlanHook, '/write-plan criar plano de rollout');
+test('slash /superpowers:brainstorm activates plan mode message', () => {
+  const payload = runHook(activatePlanHook, '/superpowers:brainstorm migrar o plugin');
 
   assert.equal(payload.continue, true);
   assert.match(payload.systemMessage, /PLAN MODE OBRIGATORIO/);
@@ -97,7 +97,7 @@ test('implementation request still triggers pipeline enforcement', () => {
 });
 
 test('response hook blocks planning response without checklist evidence', () => {
-  runHook(activatePlanHook, '/write-plan criar plano de rollout');
+  runHook(activatePlanHook, '/superpowers:brainstorm migrar o plugin');
 
   const result = runResponseHook(`
 ORCHESTRATOR_DECISION:
@@ -117,7 +117,7 @@ ORCHESTRATOR_DECISION:
 });
 
 test('response hook accepts brainstorming response with checklist evidence and keeps planning active', () => {
-  runHook(activatePlanHook, '/write-plan criar plano de rollout');
+  runHook(activatePlanHook, '/superpowers:brainstorm migrar o plugin');
 
   const result = runResponseHook(`
 ORCHESTRATOR_DECISION:
@@ -139,7 +139,7 @@ ${BRAINSTORMING_CHECKLIST}
 });
 
 test('active planning state continues after a short user answer', () => {
-  runHook(activatePlanHook, '/write-plan criar plano de rollout');
+  runHook(activatePlanHook, '/superpowers:brainstorm migrar o plugin');
 
   const firstResponse = runResponseHook(`
 ORCHESTRATOR_DECISION:
@@ -165,7 +165,7 @@ ${BRAINSTORMING_CHECKLIST}
 });
 
 test('response hook blocks plan completion inside brainstorming phase', () => {
-  runHook(activatePlanHook, '/write-plan criar plano de rollout');
+  runHook(activatePlanHook, '/superpowers:brainstorm migrar o plugin');
 
   const result = runResponseHook(`
 ORCHESTRATOR_DECISION:
@@ -195,7 +195,7 @@ update_plan
 });
 
 test('spec approval transitions planning into writing-plans mode', () => {
-  runHook(activatePlanHook, '/write-plan criar plano de rollout');
+  runHook(activatePlanHook, '/superpowers:brainstorm migrar o plugin');
 
   const payload = runHook(activateWritingPlansHook, 'aprovado, pode seguir para o plano');
 
@@ -206,7 +206,7 @@ test('spec approval transitions planning into writing-plans mode', () => {
 });
 
 test('response hook blocks spec-stage response without explicit user review request', () => {
-  runHook(activatePlanHook, '/write-plan criar plano de rollout');
+  runHook(activatePlanHook, '/superpowers:brainstorm migrar o plugin');
 
   const result = runResponseHook(`
 ORCHESTRATOR_DECISION:
@@ -238,7 +238,7 @@ Spec salva em docs/superpowers/specs/2026-03-29-rollout-design.md.
 });
 
 test('response hook accepts spec-stage response with explicit user review gate', () => {
-  runHook(activatePlanHook, '/write-plan criar plano de rollout');
+  runHook(activatePlanHook, '/superpowers:brainstorm migrar o plugin');
 
   const result = runResponseHook(`
 ORCHESTRATOR_DECISION:
@@ -269,11 +269,9 @@ Revise o arquivo e me diga se quer fazer alguma alteração antes de avançarmos
   assert.equal(fs.existsSync(planningStatePath), true);
 });
 
-test('write-plan command exists and references writing-plans', () => {
-  const content = fs.readFileSync(writePlanCommand, 'utf8');
+test('brainstorm command remains a thin deprecated entrypoint to the brainstorming skill', () => {
+  const content = fs.readFileSync(brainstormCommand, 'utf8');
 
-  assert.match(content, /brainstorming/i);
-  assert.match(content, /writing-plans/i);
-  assert.match(content, /update_plan/i);
-  assert.match(content, /não-invenção|nao-invencao/i);
+  assert.match(content, /deprecated/i);
+  assert.match(content, /superpowers:brainstorming/i);
 });

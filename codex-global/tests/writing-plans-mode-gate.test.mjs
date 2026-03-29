@@ -7,7 +7,8 @@ const activatePlanHook = 'C:\\Users\\win\\.codex\\hooks\\activate-plan-mode.cjs'
 const activateWritingPlansHook = 'C:\\Users\\win\\.codex\\hooks\\activate-writing-plans-mode.cjs';
 const requireWritingPlansChecklistHook =
   'C:\\Users\\win\\.codex\\hooks\\require-writing-plans-checklist.cjs';
-const writingPlansCommand = 'C:\\Users\\win\\.codex\\commands\\writing-plans.md';
+const writePlanCommand =
+  'C:\\Users\\win\\plugins\\superpowers-codex-global\\commands\\write-plan.md';
 const writingPlansSkill =
   'C:\\Users\\win\\plugins\\superpowers-codex-global\\skills\\writing-plans\\SKILL.md';
 const planningStatePath = 'C:\\Users\\win\\.codex\\hook-state\\planning-gate.json';
@@ -54,10 +55,10 @@ test.afterEach(() => {
   }
 });
 
-test('slash /writing-plans activates writing-plans mode', () => {
+test('slash /superpowers:write-plan activates writing-plans mode', () => {
   const payload = runHook(
     activateWritingPlansHook,
-    '/writing-plans docs/superpowers/specs/2026-03-29-rollout-design.md',
+    '/superpowers:write-plan docs/superpowers/specs/2026-03-29-rollout-design.md',
   );
 
   assert.equal(payload.continue, true);
@@ -81,7 +82,7 @@ test('approved spec while planning is active transitions into writing-plans mode
 });
 
 test('response hook blocks writing-plans response without required evidence', () => {
-  runHook(activateWritingPlansHook, '/writing-plans docs/superpowers/specs/foo.md');
+  runHook(activateWritingPlansHook, '/superpowers:write-plan docs/superpowers/specs/foo.md');
 
   const result = runResponseHook(`
 ORCHESTRATOR_DECISION:
@@ -101,7 +102,7 @@ ORCHESTRATOR_DECISION:
 });
 
 test('response hook blocks plan save without execution choice gate', () => {
-  runHook(activateWritingPlansHook, '/writing-plans docs/superpowers/specs/foo.md');
+  runHook(activateWritingPlansHook, '/superpowers:write-plan docs/superpowers/specs/foo.md');
 
   const result = runResponseHook(`
 ORCHESTRATOR_DECISION:
@@ -126,7 +127,7 @@ Plano completo e salvo em docs/superpowers/plans/2026-03-29-rollout.md.
 });
 
 test('response hook accepts full writing-plans response and clears state', () => {
-  runHook(activateWritingPlansHook, '/writing-plans docs/superpowers/specs/foo.md');
+  runHook(activateWritingPlansHook, '/superpowers:write-plan docs/superpowers/specs/foo.md');
 
   const result = runResponseHook(`
 ORCHESTRATOR_DECISION:
@@ -162,16 +163,12 @@ Qual abordagem você quer?
   assert.equal(fs.existsSync(choiceStatePath), true);
 });
 
-test('writing-plans command and skill document the mandatory flow', () => {
-  const command = fs.readFileSync(writingPlansCommand, 'utf8');
+test('write-plan command stays thin while the writing-plans skill documents the mandatory flow', () => {
+  const command = fs.readFileSync(writePlanCommand, 'utf8');
   const skill = fs.readFileSync(writingPlansSkill, 'utf8');
 
-  assert.match(command, /update_plan/i);
-  assert.match(command, /Explorar o código atual para o plano/i);
-  assert.match(command, /Oferecer escolha de execução e aguardar decisão/i);
-  assert.match(command, /Não inicie a execução do plano/i);
-  assert.match(command, /opção 1: `subagent-driven-development`|opcao 1/i);
-  assert.match(command, /opção 2: `inline execution`|inline execution/i);
+  assert.match(command, /deprecated/i);
+  assert.match(command, /superpowers writing-plans|superpowers:writing-plans/i);
   assert.match(skill, /Codex Execution Note/i);
   assert.match(skill, /Do not jump straight from "spec approved" to "plan complete"/i);
   assert.match(skill, /If the user chooses option 1, first assess whether same-session context is still sufficient/i);

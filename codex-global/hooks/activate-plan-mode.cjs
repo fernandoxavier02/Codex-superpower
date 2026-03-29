@@ -22,6 +22,7 @@ const TRIVIAL_PATTERNS = [
 
 const PLANNING_COMMAND_PATTERNS = [
   /^\/write-plan\b/i,
+  /^\/superpowers:brainstorm\b/i,
   /^\/plan\b/i,
 ];
 
@@ -53,7 +54,7 @@ Esta solicitacao e de planejamento. Trate este turno como plan mode:
 3. Crie imediatamente um checklist visivel com update_plan para TODAS as fases de brainstorming.
 4. Use o fluxo de planejamento canonico: brainstorming -> writing-plans.
 5. Trate perguntas clarificadoras como gate obrigatorio de nao-invencao: se faltar requisito material, pergunte antes de decidir.
-6. Se o pedido vier por slash, use o entrypoint /write-plan ou a skill writing-plans.
+6. Se o pedido vier por slash, use o entrypoint /superpowers:brainstorm ou a skill brainstorming.
 7. Se precisar esclarecer algo, faca perguntas de planejamento antes de qualquer execucao.
 8. Se a plataforma expuser uma UX de plan mode/request_user_input, prefira essa UX.
 9. Nao pule fases. Mantenha exatamente uma fase in_progress por vez.
@@ -89,6 +90,8 @@ O brainstorming deste pedido ainda esta ativo.
 `.trim();
 
 const CLEAR_PLANNING_PATTERNS = [
+  /^\/superpowers:write-plan\b/i,
+  /^\/superpowers:execute-plan\b/i,
   /^\/writing-plans\b/i,
   /^\/(execute-plan|executing-plans)\b/i,
   /^(cancelar|cancel|abort(ar)?|encerrar planejamento|sair do planning)\b/i,
@@ -109,7 +112,19 @@ function readPrompt(rawInput) {
     if (fs.existsSync(argvInput)) {
       return fs.readFileSync(argvInput, 'utf-8');
     }
-    return argvInput;
+    try {
+      const data = JSON.parse(argvInput);
+      return (
+        data.prompt ||
+        data.arguments ||
+        data.input ||
+        data.text ||
+        data.message ||
+        ''
+      );
+    } catch {
+      return argvInput;
+    }
   }
 
   try {

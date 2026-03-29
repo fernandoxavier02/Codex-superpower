@@ -12,6 +12,7 @@ const path = require('path');
 const SKILL_PATTERNS = [
   /^\/(context|commit|code-review|fix|verify|deploy|qa|test)/i,
   /^\/(write-plan|writing-plans|execute-plan|executing-plans)/i,
+  /^\/superpowers:(brainstorm|write-plan|execute-plan)\b/i,
   /^\/kiro:/i,
   /^\/prompts:/i,
   /^\/vertical/i,
@@ -38,6 +39,7 @@ const IMPLEMENTATION_PATTERNS = [
 
 const PLANNING_PATTERNS = [
   /^\/(write-plan|writing-plans|plan)\b/i,
+  /^\/superpowers:(brainstorm|write-plan)\b/i,
   /\b(write[- ]?plan)\b/i,
   /\b(plano de implementa[cç][aã]o)\b/i,
   /\b(plano de execu[cç][aã]o)\b/i,
@@ -102,6 +104,7 @@ Este pedido ainda esta dentro do pipeline.
 const SKILL_MESSAGE = `Skill detectado - executando diretamente.`.trim();
 
 const CLEAR_PIPELINE_PATTERNS = [
+  /^\/superpowers:(brainstorm|write-plan|execute-plan)\b/i,
   /^\/(write-plan|writing-plans|execute-plan|executing-plans)\b/i,
   /^(cancelar|cancel|abort(ar)?|encerrar pipeline|sair do pipeline)\b/i,
 ];
@@ -121,7 +124,19 @@ function readPrompt(rawInput) {
     if (fs.existsSync(argvInput)) {
       return fs.readFileSync(argvInput, 'utf-8');
     }
-    return argvInput;
+    try {
+      const data = JSON.parse(argvInput);
+      return (
+        data.prompt ||
+        data.arguments ||
+        data.input ||
+        data.text ||
+        data.message ||
+        ''
+      );
+    } catch {
+      return argvInput;
+    }
   }
 
   try {

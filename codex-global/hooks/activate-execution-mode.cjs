@@ -18,6 +18,7 @@ const TRIVIAL_PATTERNS = [
 const EXECUTION_COMMAND_PATTERNS = [
   /^\/execute-plan\b/i,
   /^\/executing-plans\b/i,
+  /^\/superpowers:execute-plan\b/i,
 ];
 
 const EXECUTION_TEXT_PATTERNS = [
@@ -29,6 +30,7 @@ const EXECUTION_TEXT_PATTERNS = [
 ];
 
 const CLEAR_EXECUTION_PATTERNS = [
+  /^\/superpowers:write-plan\b/i,
   /^\/(write-plan|writing-plans)\b/i,
   /^(cancelar|cancel|abort(ar)?|encerrar execução|encerrar execucao)\b/i,
 ];
@@ -66,7 +68,19 @@ function readPrompt(rawInput) {
     if (fs.existsSync(argvInput)) {
       return fs.readFileSync(argvInput, 'utf8');
     }
-    return argvInput;
+    try {
+      const data = JSON.parse(argvInput);
+      return (
+        data.prompt ||
+        data.arguments ||
+        data.input ||
+        data.text ||
+        data.message ||
+        ''
+      );
+    } catch {
+      return argvInput;
+    }
   }
 
   try {
