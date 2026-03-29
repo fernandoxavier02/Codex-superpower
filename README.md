@@ -1,4 +1,4 @@
-# Codex Superpower
+# Codex Superpower (adapted from the origial Puglin https://github.com/obra/superpowers for Codex)
 
 <p align="center">
   <img src="./assets/fx-studio-ai.png" alt="FX Studio AI" width="420" />
