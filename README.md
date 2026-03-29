@@ -45,6 +45,29 @@ This repository ships only the Codex plugin and the Codex-specific supporting as
 
 It does not ship compatibility folders for Claude, Cursor, Gemini, OpenCode, or any other IDE/runtime.
 
+## Scope Boundary
+
+The marketplace plugin and the local Codex pipeline are intentionally **not** the same thing.
+
+**The plugin marketplace scope covers:**
+
+- design discovery and clarification
+- written specs
+- written implementation plans
+- execution handoff
+- plan execution discipline
+- verification before completion
+
+**The local Codex pipeline scope covers:**
+
+- heavy orchestration such as `task-orchestrator`
+- adaptive batch execution
+- adversarial per-batch review gates
+- sanity-checker and final validator style closure
+- Go/No-Go style pipeline decisions
+
+The plugin should be rigorous within its own scope, but it should not claim to be the full local pipeline.
+
 ## Workflow Summary
 
 The adapted workflow keeps the same core structure as the original Superpowers system:
@@ -58,12 +81,15 @@ The adapted workflow keeps the same core structure as the original Superpowers s
 
 In the Codex adaptation, this flow is reinforced with hooks and stateful gates so planning, writing-plans, execution, and pipeline behavior remain explicit and auditable.
 
-As of `v5.0.7`, the Codex bundle also hard-enforces:
+Within the plugin bundle itself, the intended scope is:
 
-- approved TDD before implementation
-- explicit batch checkpoints during execution
-- adversarial review after every batch
-- sanity plus final validator before completion, commit, or push
+- `brainstorming` for design discovery, clarification, and written specs
+- `writing-plans` for detailed written implementation plans and explicit execution handoff
+- `subagent-driven-development` or `executing-plans` for plan execution within skill-defined checkpoints
+- `requesting-code-review` for independent code review during implementation
+- `verification-before-completion` for evidence-based completion claims
+
+Heavy pipeline orchestration is intentionally left to the local Codex pipeline assets and should not be treated as part of the marketplace plugin contract.
 
 ## Installation For Codex
 
@@ -94,7 +120,7 @@ The repository includes gate tests for the main workflow states, including:
 - writing-plans mode
 - execution choice mode
 - execution mode
-- pipeline mode
+- pipeline mode for the local Codex integration surface, not as a statement that the marketplace plugin itself implements the full pipeline contract
 
 These tests live under [`tests/`](./tests).
 

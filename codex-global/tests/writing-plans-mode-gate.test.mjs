@@ -1,19 +1,43 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
-const activatePlanHook = 'C:\\Users\\win\\.codex\\hooks\\activate-plan-mode.cjs';
-const activateWritingPlansHook = 'C:\\Users\\win\\.codex\\hooks\\activate-writing-plans-mode.cjs';
-const requireWritingPlansChecklistHook =
-  'C:\\Users\\win\\.codex\\hooks\\require-writing-plans-checklist.cjs';
-const writePlanCommand =
-  'C:\\Users\\win\\plugins\\superpowers-codex-global\\commands\\write-plan.md';
-const writingPlansSkill =
-  'C:\\Users\\win\\plugins\\superpowers-codex-global\\skills\\writing-plans\\SKILL.md';
-const planningStatePath = 'C:\\Users\\win\\.codex\\hook-state\\planning-gate.json';
-const writingPlansStatePath = 'C:\\Users\\win\\.codex\\hook-state\\writing-plans-gate.json';
-const choiceStatePath = 'C:\\Users\\win\\.codex\\hook-state\\execution-choice-gate.json';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const repoRoot = path.resolve(__dirname, '..', '..');
+const codexHome = process.env.USERPROFILE || process.env.HOME || 'C:\\Users\\win';
+
+const activatePlanHook = path.join(repoRoot, 'codex-global', 'hooks', 'activate-plan-mode.cjs');
+const activateWritingPlansHook = path.join(
+  repoRoot,
+  'codex-global',
+  'hooks',
+  'activate-writing-plans-mode.cjs',
+);
+const requireWritingPlansChecklistHook = path.join(
+  repoRoot,
+  'codex-global',
+  'hooks',
+  'require-writing-plans-checklist.cjs',
+);
+const writePlanCommand = path.join(repoRoot, 'commands', 'write-plan.md');
+const writingPlansSkill = path.join(repoRoot, 'skills', 'writing-plans', 'SKILL.md');
+const planningStatePath = path.join(codexHome, '.codex', 'hook-state', 'planning-gate.json');
+const writingPlansStatePath = path.join(
+  codexHome,
+  '.codex',
+  'hook-state',
+  'writing-plans-gate.json',
+);
+const choiceStatePath = path.join(
+  codexHome,
+  '.codex',
+  'hook-state',
+  'execution-choice-gate.json',
+);
 
 function runHook(hookPath, prompt) {
   const result = spawnSync(
@@ -39,7 +63,7 @@ update_plan
 ✔ Ler a spec aprovada
 ✔ Verificar requirements/regras/testes relevantes
 ◼ Escrever o plano de implementação
-◻ Self-review do plano
+◻ Plan review loop independente
 ◻ Oferecer escolha de execução e aguardar decisão
 `.trim();
 
@@ -122,7 +146,7 @@ Plano completo e salvo em docs/superpowers/plans/2026-03-29-rollout.md.
 `);
 
   assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /plan written without execution-choice gate/i);
+  assert.match(result.stderr, /reviewed plan without execution-choice gate/i);
   assert.equal(fs.existsSync(writingPlansStatePath), true);
 });
 
@@ -147,10 +171,11 @@ update_plan
 ✔ Ler a spec aprovada
 ✔ Verificar requirements/regras/testes relevantes
 ✔ Escrever o plano de implementação
-✔ Self-review do plano
+✔ Plan review loop independente
 ◼ Oferecer escolha de execução e aguardar decisão
 
 Vou explorar o código atual para o plano, ler a spec aprovada e verificar requirements/regras/testes relevantes.
+Review independente do plano concluído.
 Plan complete and saved to docs/superpowers/plans/2026-03-29-rollout.md.
 Duas opções de execução:
 1. Subagent-Driven com fallback para próxima sessão se o contexto estiver insuficiente

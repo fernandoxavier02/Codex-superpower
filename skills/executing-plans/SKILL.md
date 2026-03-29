@@ -9,6 +9,10 @@ description: Use when you have a written implementation plan to execute in a sep
 
 Load plan, review critically, execute all tasks, report when complete.
 
+This skill provides **skill-level execution checkpoints**, not the full local pipeline.
+It does **not** imply adaptive batch execution, per-batch adversarial review, sanity-checker closure,
+or Go/No-Go style validation. Those belong to the local Codex pipeline, not to `executing-plans`.
+
 **Announce at start:** "I'm using the executing-plans skill to implement this plan."
 
 **Codex note:** use `update_plan` for visible task tracking and enable `[features] multi_agent = true` in `~/.codex/config.toml` before relying on subagents.
@@ -35,6 +39,13 @@ For each task:
 
 Maintain execution in visible stages. The user should be able to see the plan progressing through `update_plan` while you work.
 
+These checkpoints are intentionally lightweight:
+- task-by-task progress visibility
+- required verifications from the written plan
+- stop-and-ask behavior when the plan is incomplete or ambiguous
+
+They are **not** a substitute for the heavier local pipeline orchestration system.
+
 ### Step 3: Complete Development
 
 After all tasks complete and verified:
@@ -48,6 +59,7 @@ After all tasks complete and verified:
 - Hit a blocker (missing dependency, test fails, instruction unclear)
 - Plan has critical gaps preventing starting
 - You don't understand an instruction
+- A task or acceptance criterion is ambiguous enough that you would have to invent behavior
 - Verification fails repeatedly
 - A plan step requires a product or technical decision that the plan does not actually define
 
@@ -65,9 +77,23 @@ After all tasks complete and verified:
 - Review plan critically first
 - Follow plan steps exactly
 - Don't skip verifications
+- Treat ambiguity as a reason to stop and ask, not as permission to infer hidden requirements
 - Reference skills when plan says to
 - Stop when blocked, don't guess
 - Never start implementation on main/master branch without explicit user consent
+
+## Scope Boundary
+
+Use this skill when you already have a written plan and want disciplined execution in a fresh session.
+
+Do **not** treat this skill as equivalent to the local pipeline for:
+- task orchestration
+- adaptive batching
+- adversarial per-batch review
+- sanity/final validation gates
+- Go/No-Go decisions
+
+If the work needs those heavier controls, hand it off to the local pipeline instead of stretching `executing-plans` beyond its scope.
 
 ## Integration
 

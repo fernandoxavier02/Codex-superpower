@@ -68,6 +68,15 @@ Skills are discovered automatically. Codex activates them when:
 - The task matches a skill's description
 - The `using-superpowers` skill directs Codex to use one
 
+## Scope Note
+
+This Codex bundle covers the marketplace-scope workflow: design discovery, written specs,
+written implementation plans, execution handoff, execution discipline, and verification.
+
+It is not the same thing as the heavier local Codex pipeline. Local pipeline concerns such as
+task orchestration, adaptive batching, adversarial per-batch review, and Go/No-Go validation
+remain outside the marketplace plugin contract.
+
 ### Personal Skills
 
 Create your own skills in `~/.agents/skills/`:

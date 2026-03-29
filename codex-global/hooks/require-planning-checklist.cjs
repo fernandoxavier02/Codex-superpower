@@ -27,7 +27,7 @@ const REQUIRED_PHASES = [
   /Perguntas clarificadoras \(1 por vez\)/i,
   /Propor 2-3 abordagens com trade-offs/i,
   /Apresentar design por seções \(aprovação incremental\)/i,
-  /Escrever design doc e spec self-review/i,
+  /Escrever design doc e spec review loop/i,
   /Revisão do usuário e transição para writing-plans/i,
 ];
 
@@ -44,13 +44,10 @@ const SPEC_PATH_PATTERNS = [
   /docs\\superpowers\\specs\\[^\s]+\.md/i,
 ];
 
-const SPEC_SELF_REVIEW_PATTERNS = [
-  /spec escrita e self-review conclu[ií]do/i,
-  /spec written and self-review complete/i,
-  /placeholder scan/i,
-  /consist[êe]ncia interna/i,
-  /scope check/i,
-  /ambiguity check/i,
+const SPEC_REVIEW_LOOP_PATTERNS = [
+  /spec escrita e review independente conclu[ií]do/i,
+  /spec written and independent review complete/i,
+  /reviewer approved/i,
 ];
 
 const USER_REVIEW_REQUEST_PATTERNS = [
@@ -95,7 +92,7 @@ function requiresUserSpecReview(response) {
   const text = (response || '').trim();
   return (
     SPEC_PATH_PATTERNS.some((pattern) => pattern.test(text)) ||
-    SPEC_SELF_REVIEW_PATTERNS.some((pattern) => pattern.test(text))
+    SPEC_REVIEW_LOOP_PATTERNS.some((pattern) => pattern.test(text))
   );
 }
 
@@ -138,10 +135,11 @@ Do not save docs/superpowers/plans/... directly from the brainstorming phase.
     if (hasChecklistEvidence(response)) {
       if (requiresUserSpecReview(response) && !hasUserSpecReviewGate(response)) {
         process.stderr.write(`
-BLOCKED: spec self-review without explicit user review gate
+BLOCKED: independent spec review without explicit user review gate
 
 When the brainstorming flow reaches the written spec stage, the assistant must:
 - mention the written spec path under docs/superpowers/specs/
+- complete the independent spec review loop
 - ask the user to review the spec file before proceeding
 - wait for approval before transitioning to writing-plans
 `.trim());

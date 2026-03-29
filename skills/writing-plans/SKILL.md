@@ -22,7 +22,7 @@ When operating in Codex, mirror the writing-plans phase explicitly:
   2. Read approved spec
   3. Check relevant requirements/rules/tests
   4. Write implementation plan
-  5. Self-review plan
+  5. Independent plan review loop
   6. Offer execution choice and wait
 - Keep exactly one step `in_progress` at a time
 - Do not jump straight from "spec approved" to "plan complete"
@@ -135,17 +135,23 @@ Every step must contain the actual content an engineer needs. These are **plan f
 - Exact commands with expected output
 - DRY, YAGNI, TDD, frequent commits
 
-## Self-Review
+## Plan Review Loop
 
-After writing the complete plan, look at the spec with fresh eyes and check the plan against it. This is a checklist you run yourself — not a subagent dispatch.
+After writing the complete plan, run an independent plan review before offering execution choices.
 
-**1. Spec coverage:** Skim each section/requirement in the spec. Can you point to a task that implements it? List any gaps.
+1. Dispatch an independent plan reviewer using `plan-document-reviewer-prompt.md`
+2. Give the reviewer the plan path plus the approved spec path
+3. If the reviewer finds blocking issues:
+   - fix the plan document yourself
+   - re-dispatch the reviewer
+   - repeat until the reviewer approves or the loop exceeds 3 iterations
+4. If the loop exceeds 3 iterations, stop and surface the disagreement or blocker to the user
 
-**2. Placeholder scan:** Search your plan for red flags — any of the patterns from the "No Placeholders" section above. Fix them.
+**Reviewer independence requirements:**
 
-**3. Type consistency:** Do the types, method signatures, and property names you used in later tasks match what you defined in earlier tasks? A function called `clearLayers()` in Task 3 but `clearFullLayers()` in Task 7 is a bug.
-
-If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
+- The plan review must be an independent reviewer step, not the coordinator doing another inline self-review
+- The reviewer should check buildability, spec coverage, placeholder content, and whether the tasks are actionable enough for implementation
+- If you disagree with reviewer feedback, explain the disagreement and either resolve it in the plan or surface it to the user
 
 ## Execution Handoff
 

@@ -1,17 +1,43 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
-const activatePlanHook = 'C:\\Users\\win\\.codex\\hooks\\activate-plan-mode.cjs';
-const activateWritingPlansHook = 'C:\\Users\\win\\.codex\\hooks\\activate-writing-plans-mode.cjs';
-const forcePipelineHook = 'C:\\Users\\win\\.codex\\hooks\\force-pipeline-agents.cjs';
-const requirePlanningChecklistHook =
-  'C:\\Users\\win\\.codex\\hooks\\require-planning-checklist.cjs';
-const brainstormCommand = 'C:\\Users\\win\\plugins\\superpowers-codex-global\\commands\\brainstorm.md';
-const planningStatePath = 'C:\\Users\\win\\.codex\\hook-state\\planning-gate.json';
-const pipelineStatePath = 'C:\\Users\\win\\.codex\\hook-state\\pipeline-gate.json';
-const writingPlansStatePath = 'C:\\Users\\win\\.codex\\hook-state\\writing-plans-gate.json';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const repoRoot = path.resolve(__dirname, '..', '..');
+const codexHome = process.env.USERPROFILE || process.env.HOME || 'C:\\Users\\win';
+
+const activatePlanHook = path.join(repoRoot, 'codex-global', 'hooks', 'activate-plan-mode.cjs');
+const activateWritingPlansHook = path.join(
+  repoRoot,
+  'codex-global',
+  'hooks',
+  'activate-writing-plans-mode.cjs',
+);
+const forcePipelineHook = path.join(
+  repoRoot,
+  'codex-global',
+  'hooks',
+  'force-pipeline-agents.cjs',
+);
+const requirePlanningChecklistHook = path.join(
+  repoRoot,
+  'codex-global',
+  'hooks',
+  'require-planning-checklist.cjs',
+);
+const brainstormCommand = path.join(repoRoot, 'commands', 'brainstorm.md');
+const planningStatePath = path.join(codexHome, '.codex', 'hook-state', 'planning-gate.json');
+const pipelineStatePath = path.join(codexHome, '.codex', 'hook-state', 'pipeline-gate.json');
+const writingPlansStatePath = path.join(
+  codexHome,
+  '.codex',
+  'hook-state',
+  'writing-plans-gate.json',
+);
 
 function runHook(hookPath, prompt) {
   const result = spawnSync(
@@ -37,7 +63,7 @@ update_plan
 ◼ Perguntas clarificadoras (1 por vez)
 ◻ Propor 2-3 abordagens com trade-offs
 ◻ Apresentar design por seções (aprovação incremental)
-◻ Escrever design doc e spec self-review
+◻ Escrever design doc e spec review loop
 ◻ Revisão do usuário e transição para writing-plans
 `.trim();
 
@@ -225,15 +251,15 @@ update_plan
 ✔ Perguntas clarificadoras (1 por vez)
 ✔ Propor 2-3 abordagens com trade-offs
 ✔ Apresentar design por seções (aprovação incremental)
-✔ Escrever design doc e spec self-review
+✔ Escrever design doc e spec review loop
 ◼ Revisão do usuário e transição para writing-plans
 
-Spec escrita e self-review concluído.
+Spec escrita e review independente concluído.
 Spec salva em docs/superpowers/specs/2026-03-29-rollout-design.md.
 `);
 
   assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /spec self-review without explicit user review gate/i);
+  assert.match(result.stderr, /independent spec review without explicit user review gate/i);
   assert.equal(fs.existsSync(planningStatePath), true);
 });
 
@@ -257,10 +283,10 @@ update_plan
 ✔ Perguntas clarificadoras (1 por vez)
 ✔ Propor 2-3 abordagens com trade-offs
 ✔ Apresentar design por seções (aprovação incremental)
-✔ Escrever design doc e spec self-review
+✔ Escrever design doc e spec review loop
 ◼ Revisão do usuário e transição para writing-plans
 
-Spec escrita e self-review concluído.
+Spec escrita e review independente concluído.
 Spec salva em docs/superpowers/specs/2026-03-29-rollout-design.md.
 Revise o arquivo e me diga se quer fazer alguma alteração antes de avançarmos para o plano de implementação.
 `);

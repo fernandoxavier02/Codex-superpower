@@ -4,7 +4,7 @@
  *
  * Exige evidência do workflow interno de writing-plans:
  * explorar código, ler spec, verificar regras/testes, escrever plano,
- * self-review e oferecer escolha de execução.
+ * review independente do plano e oferecer escolha de execução.
  */
 
 const fs = require('fs');
@@ -35,7 +35,7 @@ const REQUIRED_PHASES = [
   /Ler a spec aprovada/i,
   /Verificar requirements\/regras\/testes relevantes/i,
   /Escrever o plano de implementação/i,
-  /Self-review do plano/i,
+  /Plan review loop independente/i,
   /Oferecer escolha de execução e aguardar decisão/i,
 ];
 
@@ -53,6 +53,12 @@ const CONTEXT_GATHERING_PATTERNS = [
 const PLAN_PATH_PATTERNS = [
   /docs\/superpowers\/plans\/[^\s]+\.md/i,
   /docs\\superpowers\\plans\\[^\s]+\.md/i,
+];
+
+const PLAN_REVIEW_COMPLETION_PATTERNS = [
+  /review independente do plano conclu[ií]do/i,
+  /independent plan review complete/i,
+  /plan reviewer approved/i,
 ];
 
 const EXECUTION_CHOICE_PATTERNS = [
@@ -99,7 +105,10 @@ function hasWritingPlansEvidence(response) {
 
 function requiresExecutionChoice(response) {
   const text = (response || '').trim();
-  return PLAN_PATH_PATTERNS.some((pattern) => pattern.test(text));
+  return (
+    PLAN_PATH_PATTERNS.some((pattern) => pattern.test(text)) ||
+    PLAN_REVIEW_COMPLETION_PATTERNS.some((pattern) => pattern.test(text))
+  );
 }
 
 function hasExecutionChoice(response) {
@@ -162,10 +171,11 @@ This turn was classified as writing-plans. The assistant response must:
 
     if (requiresExecutionChoice(response) && !hasExecutionChoice(response)) {
       process.stderr.write(`
-BLOCKED: plan written without execution-choice gate
+BLOCKED: reviewed plan without execution-choice gate
 
-After saving the plan, the assistant must:
+After the independent plan review loop passes, the assistant must:
 - show the plan path under docs/superpowers/plans/
+- complete the independent plan review loop
 - offer exactly two execution approaches
 - ask the user which approach they want
 - avoid starting execution in the same turn
