@@ -1,205 +1,106 @@
-# Codex Superpower
+<div align="center">
+  <img src="assets/fx-studio-ai-logo.png" alt="FX Studio AI" width="600"/>
+</div>
+
+<h1 align="center">Codex Superpower</h1>
 
 <p align="center">
-  <img src="./assets/fx-studio-ai.png" alt="FX Studio AI" width="460" />
-</p>
-
-<p align="center"><strong>Professional Superpowers workflow adaptation for Codex</strong></p>
-
-<p align="center">
-  Codex-focused distribution of the original
-  <a href="https://github.com/obra/superpowers">Superpowers</a>
-  methodology, packaged with plugin assets, workflow hooks, and a local read-only diagnostics MCP.
+  <strong>Agentic Skills + Pipeline Orchestration for OpenAI Codex CLI</strong>
 </p>
 
 <p align="center">
-  <img alt="Target Codex" src="https://img.shields.io/badge/Target-Codex-0A84FF?style=flat-square" />
-  <img alt="Transport stdio" src="https://img.shields.io/badge/MCP-stdio-101828?style=flat-square" />
-  <img alt="Diagnostics Read Only" src="https://img.shields.io/badge/Diagnostics-read--only-12B76A?style=flat-square" />
-  <img alt="License MIT" src="https://img.shields.io/badge/License-MIT-F79009?style=flat-square" />
+  <img src="https://img.shields.io/badge/platform-OpenAI%20Codex%20CLI-412991?style=flat-square" alt="Platform"/>
+  <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License"/>
+  <img src="https://img.shields.io/badge/language-JavaScript-F7DF1E?style=flat-square" alt="Language"/>
 </p>
 
-## Executive Summary
+## What It Does
 
-This repository packages the Codex-native version of the Superpowers workflow with a clear and honest scope:
+Codex Superpower brings together the Superpowers skills framework and the Pipeline Orchestrator into a unified package for OpenAI Codex CLI. It combines 14 specialized development skills with multi-agent pipeline orchestration, all adapted for Codex's terminal-based environment.
 
-- a Codex plugin bundle under `.codex-plugin/`
-- native skill and hook assets for the workflow
-- a real local diagnostics MCP registered through `.mcp.json`
-- test coverage for manifests, diagnostics behavior, and published integration wiring
+The result is a structured development workflow engine that runs entirely in the terminal: brainstorm ideas, write specs, execute with TDD, review with adversarial agents, and deploy -- all through a single cohesive system.
 
-This version does not ship any external app surface. The real integration surface for this release is the local read-only diagnostic MCP.
+## Features
 
-## Why This Repository Exists
+- **14 Superpowers Skills** — Brainstorming, TDD, code review, debugging, plan execution, subagent delegation, git worktrees, and more
+- **Pipeline Orchestration** — Multi-agent task execution with auto-classification, adaptive batching, and quality gates
+- **Local Diagnostics MCP** — Read-only stdio MCP server for bundle inspection, installation checks, and configuration diagnostics
+- **Adversarial Review** — Built-in review agents that challenge proposals before execution
+- **1% Rule Methodology** — Each skill focuses on one concern, delegating via subagents
+- **Terminal-Native** — Designed for Codex CLI's terminal-based interaction model
+- **Structured Lifecycle** — From ideation through implementation, review, and deployment in a single toolchain
+- **Plugin Bundle** — Complete `.codex-plugin/` manifest with skills, hooks, commands, and agents
 
-The goal is not to replace or rebrand the upstream project. The goal is to adapt the original Superpowers operating model to Codex while preserving the discipline that makes the workflow valuable:
-
-- brainstorming before implementation
-- explicit specs before execution
-- written plans before code changes
-- multi-agent execution with review checkpoints
-- verification before completion
-
-## Highlights In This Version
-
-- Local diagnostic MCP published through [`.mcp.json`](./.mcp.json)
-- Read-only diagnostics contract implemented in [`scripts/mcp/`](./scripts/mcp)
-- Plugin manifest aligned to real behavior in [`.codex-plugin/plugin.json`](./.codex-plugin/plugin.json)
-- Documentation updated to remove unused external app promises
-- Published config snippet cleaned up to remove `collab = true`
-- Targeted MCP test coverage in [`tests/mcp/`](./tests/mcp)
-
-## What Is Included
-
-| Area | Purpose |
-| --- | --- |
-| [`.codex-plugin/`](./.codex-plugin) | Codex plugin manifest and bundle metadata |
-| [`skills/`](./skills) | Active Superpowers skills used by Codex |
-| [`hooks/`](./hooks) | Workflow enforcement hooks |
-| [`commands/`](./commands) | Codex command entrypoints |
-| [`agents/`](./agents) | Agent-facing bundle assets |
-| [`scripts/mcp/`](./scripts/mcp) | Local diagnostics MCP implementation |
-| [`tests/`](./tests) | Validation for manifests, MCP logic, and integration wiring |
-| [`codex-global/`](./codex-global) | Global support assets and install references |
-| [`docs/`](./docs) | Codex-facing documentation and approved implementation records |
-
-## Scope Boundary
-
-This repository is intentionally strict about its public contract.
-
-**Included in scope**
-
-- Codex workflow assets
-- local diagnostics MCP
-- installation guidance for native skill discovery
-- tests that validate the published contract
-
-**Out of scope in this version**
-
-- external app integration via `.app.json`
-- marketplace claims for capabilities that are not actually wired
-- write-capable MCP operations
-
-The bundle itself still contains interactive and write-capable workflows through skills, hooks, and execution patterns. The **MCP surface only** is read-only.
-
-## Quick Start
-
-Choose one of the two supported installation paths:
-
-1. **Marketplace-local install**
-   Register the plugin in your home-local Codex marketplace and point it at a local checkout in `~/plugins/superpowers-codex-global`.
-2. **Manual clone install**
-   Clone the repository, create the native skills link, restart Codex, and use the bundle directly from the checkout.
-
-For most users, the best route is:
-
-1. Clone this repository to `~/plugins/superpowers-codex-global`.
-2. Register or update the local marketplace entry in `~/.agents/plugins/marketplace.json`.
-3. Restart Codex so it reloads the local marketplace and the plugin manifest.
-4. If needed, enable multi-agent support with the snippet in [`codex-global/config/hooks-snippet.toml`](./codex-global/config/hooks-snippet.toml).
-5. Use the repo-local diagnostics MCP exposed by [`.mcp.json`](./.mcp.json) when working inside this workspace.
-
-Detailed installation guidance lives in [`.codex/INSTALL.md`](./.codex/INSTALL.md) and [docs/README.codex.md](./docs/README.codex.md).
-
-## Installation Paths
+## Installation
 
 ### Option A: Marketplace-Local Install
 
-Codex supports a **home-local marketplace** file at `~/.agents/plugins/marketplace.json`.
-This is not a remote public marketplace. It is a machine-local catalog that can point to plugins stored under `~/plugins/`.
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/fernandoxavier02/Codex-superpower.git ~/plugins/superpowers-codex-global
+   ```
 
-For this plugin, the marketplace entry should point to:
+2. Register the plugin in your local Codex marketplace at `~/.agents/plugins/marketplace.json`.
 
-- plugin name: `superpowers-codex-global`
-- source path: `./plugins/superpowers-codex-global`
-- installation policy: `AVAILABLE`
-- authentication policy: `ON_INSTALL`
-
-When installed this way, Codex reads the plugin manifest and loads the bundle's
-declared `skills`, `hooks`, and `mcpServers` from the local checkout.
-You do **not** need a separate `~/.agents/skills/superpowers` symlink for this route.
-
-This route is ideal if you want the plugin to appear in the Codex marketplace UI on your machine while still being backed by a local checkout you control.
+3. Restart Codex to reload the plugin manifest.
 
 ### Option B: Manual Clone Install
 
-If you do not want to use the marketplace-local route, you can still install the bundle manually:
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/fernandoxavier02/Codex-superpower.git
+   ```
 
-- clone the repository into `~/plugins/superpowers-codex-global`
-- point `~/.agents/skills/superpowers` at the bundle's `skills/` directory
-- restart Codex
+2. Symlink the skills directory:
+   ```bash
+   ln -s $(pwd)/Codex-superpower/skills ~/.agents/skills/superpowers
+   ```
 
-Both routes use the same local checkout and the same repo-local only diagnostic MCP, but only the manual route depends on the explicit skills symlink/junction.
+3. Restart Codex.
 
-## Diagnostics MCP
+See [.codex/INSTALL.md](./.codex/INSTALL.md) for detailed installation guidance.
 
-The diagnostics service is implemented as a **local stdio MCP** and is intentionally narrow:
+## Usage
 
-- server name: `superpowers-codex-diagnostics`
-- transport: `stdio`
-- contract: read-only diagnostics
-- entrypoint: [`scripts/mcp/superpowers-codex-diagnostics.mjs`](./scripts/mcp/superpowers-codex-diagnostics.mjs)
+Invoke skills and pipeline commands through Codex:
 
-Core diagnostics tools include:
+```bash
+# Brainstorm a feature
+@brainstorm "Design a caching layer for the API"
 
-- `bundle_metadata`
-- `inspect_bundle`
-- `inspect_installation`
-- `inspect_hooks`
-- `inspect_config`
-- `doctor`
+# Run TDD workflow
+@tdd "Implement pagination for the search endpoint"
 
-This MCP is for bundle diagnostics only. It is not an app integration layer and does not expose write operations.
+# Submit a task to the pipeline
+@pipeline "Refactor error handling across all services"
+
+# Code review
+@review "Audit the latest changes for performance issues"
+
+# Run diagnostics on the bundle
+# (via the local MCP: bundle_metadata, inspect_bundle, doctor)
+```
+
+Skills produce structured outputs with clear next steps. The pipeline orchestrator handles complex multi-step tasks by decomposing them, assigning specialized agents, and enforcing quality gates throughout.
 
 ## Validation
 
-The repository includes targeted automated checks for the published contract:
-
-- manifest and documentation expectations
-- diagnostics tool behavior
-- integration wiring derived from [`.mcp.json`](./.mcp.json)
-
-Primary validation suite:
+Run the test suite to verify the installation:
 
 ```bash
-node --test tests/mcp/superpowers-codex-manifests.test.mjs tests/mcp/superpowers-codex-diagnostics.test.mjs tests/mcp/superpowers-codex-diagnostics-integration.test.mjs
+node --test tests/mcp/superpowers-codex-manifests.test.mjs \
+  tests/mcp/superpowers-codex-diagnostics.test.mjs \
+  tests/mcp/superpowers-codex-diagnostics-integration.test.mjs
 ```
-
-Installation is considered successful when:
-
-- the bundle is present in your local marketplace, if you chose that route
-- Codex can discover the plugin-provided skills, or the `superpowers` skills namespace in manual mode
-- the repo-local diagnostic MCP is available inside this workspace
-- the diagnostics bundle reports the expected assets and configuration
-
-## Workflow Shape
-
-The Codex adaptation preserves the recognizable structure of the original Superpowers workflow:
-
-1. `brainstorming`
-2. `writing-plans`
-3. `subagent-driven-development` or `executing-plans`
-4. `requesting-code-review`
-5. `verification-before-completion`
-6. `finishing-a-development-branch`
-
-That workflow is reinforced here with hooks, docs, and validation assets so planning and execution stay explicit and reviewable.
-
-## Attribution
-
-This project builds on the upstream Superpowers methodology and preserves clear attribution:
-
-- Upstream repository: [obra/superpowers](https://github.com/obra/superpowers)
-- Original creator: Jesse Vincent
-- Original organization: Prime Radiant
-- Codex adaptation, workflow port, global integration, and diagnostics packaging: Fernando Xavier, FX Studio AI
-
-## Community And Upstream
-
-- Upstream issues: [github.com/obra/superpowers/issues](https://github.com/obra/superpowers/issues)
-- Upstream marketplace: [github.com/obra/superpowers-marketplace](https://github.com/obra/superpowers-marketplace)
-- Upstream Discord: [discord.gg/Jd8Vphy9jq](https://discord.gg/Jd8Vphy9jq)
 
 ## License
 
-MIT License. See [LICENSE](./LICENSE).
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+---
+
+<div align="center">
+  <strong>Built by <a href="https://github.com/fernandoxavier02">Fernando Xavier</a></strong>
+  <br/>
+  <a href="https://fxstudioai.com">FX Studio AI</a> — Business Automation with AI
+</div>
