@@ -1,7 +1,8 @@
 ---
-name: systematic-debugging
+name: superpower-debugging
 description: Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes
 ---
+<!-- Adapted from Claude Code superpowers v5.0.7 for Codex CLI -->
 
 # Systematic Debugging
 
@@ -107,17 +108,39 @@ You MUST complete each phase before proceeding to the next.
 
    **This reveals:** Which layer fails (secrets → workflow ✓, workflow → build ✗)
 
-5. **Trace Data Flow**
+5. **Trace Data Flow (Root Cause Tracing)**
 
    **WHEN error is deep in call stack:**
 
-   See `root-cause-tracing.md` in this directory for the complete backward tracing technique.
+   Bugs often manifest deep in the call stack. Your instinct is to fix where the error appears, but that's treating a symptom.
 
-   **Quick version:**
-   - Where does bad value originate?
-   - What called this with bad value?
-   - Keep tracing up until you find the source
-   - Fix at source, not at symptom
+   **Trace backward through the call chain until you find the original trigger, then fix at the source.**
+
+   The Tracing Process:
+   1. **Observe the Symptom** — What error do you see?
+   2. **Find Immediate Cause** — What code directly causes this?
+   3. **Ask: What Called This?** — Trace the call chain upward
+   4. **Keep Tracing Up** — What value was passed? Where did it come from?
+   5. **Find Original Trigger** — Where did the bad value originate?
+
+   **Adding Stack Traces for instrumentation:**
+   ```typescript
+   // Before the problematic operation
+   async function gitInit(directory: string) {
+     const stack = new Error().stack;
+     console.error('DEBUG git init:', {
+       directory,
+       cwd: process.cwd(),
+       nodeEnv: process.env.NODE_ENV,
+       stack,
+     });
+     await execFileAsync('git', ['init'], { cwd: directory });
+   }
+   ```
+
+   **Critical:** Use `console.error()` in tests (not logger - may not show)
+
+   **NEVER fix just where the error appears.** Trace back to find the original trigger.
 
 ### Phase 2: Pattern Analysis
 
@@ -176,7 +199,7 @@ You MUST complete each phase before proceeding to the next.
    - Automated test if possible
    - One-off test script if no framework
    - MUST have before fixing
-   - Use the `superpowers:test-driven-development` skill for writing proper failing tests
+   - Use `$superpower-tdd` for writing proper failing tests
 
 2. **Implement Single Fix**
    - Address the root cause identified
@@ -212,6 +235,344 @@ You MUST complete each phase before proceeding to the next.
 
    This is NOT a failed hypothesis - this is a wrong architecture.
 
+<!-- Inlined from defense-in-depth.md -->
+## Defense-in-Depth Validation
+
+When you fix a bug caused by invalid data, adding validation at one place feels sufficient. But that single check can be bypassed by different code paths, refactoring, or mocks.
+
+**Core principle:** Validate at EVERY layer data passes through. Make the bug structurally impossible.
+
+### Why Multiple Layers
+
+Single validation: "We fixed the bug"
+Multiple layers: "We made the bug impossible"
+
+Different layers catch different cases:
+- Entry validation catches most bugs
+- Business logic catches edge cases
+- Environment guards prevent context-specific dangers
+- Debug logging helps when other layers fail
+
+### The Four Layers
+
+#### Layer 1: Entry Point Validation
+**Purpose:** Reject obviously invalid input at API boundary
+
+```typescript
+function createProject(name: string, workingDirectory: string) {
+  if (!workingDirectory || workingDirectory.trim() === '') {
+    throw new Error('workingDirectory cannot be empty');
+  }
+  if (!existsSync(workingDirectory)) {
+    throw new Error(`workingDirectory does not exist: ${workingDirectory}`);
+  }
+  if (!statSync(workingDirectory).isDirectory()) {
+    throw new Error(`workingDirectory is not a directory: ${workingDirectory}`);
+  }
+  // ... proceed
+}
+```
+
+#### Layer 2: Business Logic Validation
+**Purpose:** Ensure data makes sense for this operation
+
+```typescript
+function initializeWorkspace(projectDir: string, sessionId: string) {
+  if (!projectDir) {
+    throw new Error('projectDir required for workspace initialization');
+  }
+  // ... proceed
+}
+```
+
+#### Layer 3: Environment Guards
+**Purpose:** Prevent dangerous operations in specific contexts
+
+```typescript
+async function gitInit(directory: string) {
+  // In tests, refuse git init outside temp directories
+  if (process.env.NODE_ENV === 'test') {
+    const normalized = normalize(resolve(directory));
+    const tmpDir = normalize(resolve(tmpdir()));
+
+    if (!normalized.startsWith(tmpDir)) {
+      throw new Error(
+        `Refusing git init outside temp dir during tests: ${directory}`
+      );
+    }
+  }
+  // ... proceed
+}
+```
+
+#### Layer 4: Debug Instrumentation
+**Purpose:** Capture context for forensics
+
+```typescript
+async function gitInit(directory: string) {
+  const stack = new Error().stack;
+  logger.debug('About to git init', {
+    directory,
+    cwd: process.cwd(),
+    stack,
+  });
+  // ... proceed
+}
+```
+
+### Applying the Pattern
+
+When you find a bug:
+
+1. **Trace the data flow** - Where does bad value originate? Where used?
+2. **Map all checkpoints** - List every point data passes through
+3. **Add validation at each layer** - Entry, business, environment, debug
+4. **Test each layer** - Try to bypass layer 1, verify layer 2 catches it
+
+### Key Insight
+
+All four layers are necessary. During testing, each layer catches bugs the others miss:
+- Different code paths bypass entry validation
+- Mocks bypass business logic checks
+- Edge cases on different platforms need environment guards
+- Debug logging identifies structural misuse
+
+**Don't stop at one validation point.** Add checks at every layer.
+<!-- End inlined from defense-in-depth.md -->
+
+## Condition-Based Waiting
+
+Flaky tests often guess at timing with arbitrary delays. This creates race conditions where tests pass on fast machines but fail under load or in CI.
+
+**Core principle:** Wait for the actual condition you care about, not a guess about how long it takes.
+
+### When to Use
+
+**Use when:**
+- Tests have arbitrary delays (`setTimeout`, `sleep`, `time.sleep()`)
+- Tests are flaky (pass sometimes, fail under load)
+- Tests timeout when run in parallel
+- Waiting for async operations to complete
+
+**Don't use when:**
+- Testing actual timing behavior (debounce, throttle intervals)
+- Always document WHY if using arbitrary timeout
+
+### Core Pattern
+
+```typescript
+// BAD: Guessing at timing
+await new Promise(r => setTimeout(r, 50));
+const result = getResult();
+expect(result).toBeDefined();
+
+// GOOD: Waiting for condition
+await waitFor(() => getResult() !== undefined);
+const result = getResult();
+expect(result).toBeDefined();
+```
+
+### Quick Patterns
+
+| Scenario | Pattern |
+|----------|---------|
+| Wait for event | `waitFor(() => events.find(e => e.type === 'DONE'))` |
+| Wait for state | `waitFor(() => machine.state === 'ready')` |
+| Wait for count | `waitFor(() => items.length >= 5)` |
+| Wait for file | `waitFor(() => fs.existsSync(path))` |
+| Complex condition | `waitFor(() => obj.ready && obj.value > 10)` |
+
+### Generic Polling Implementation
+
+```typescript
+async function waitFor<T>(
+  condition: () => T | undefined | null | false,
+  description: string,
+  timeoutMs = 5000
+): Promise<T> {
+  const startTime = Date.now();
+
+  while (true) {
+    const result = condition();
+    if (result) return result;
+
+    if (Date.now() - startTime > timeoutMs) {
+      throw new Error(`Timeout waiting for ${description} after ${timeoutMs}ms`);
+    }
+
+    await new Promise(r => setTimeout(r, 10)); // Poll every 10ms
+  }
+}
+```
+
+### Domain-Specific Helpers
+
+Build specialized helpers on top of the generic `waitFor`:
+
+```typescript
+/**
+ * Wait for a specific event type to appear
+ * Example: await waitForEvent(threadManager, threadId, 'TOOL_RESULT');
+ */
+function waitForEvent(
+  threadManager: ThreadManager,
+  threadId: string,
+  eventType: string,
+  timeoutMs = 5000
+): Promise<Event> {
+  return new Promise((resolve, reject) => {
+    const startTime = Date.now();
+    const check = () => {
+      const events = threadManager.getEvents(threadId);
+      const event = events.find((e) => e.type === eventType);
+      if (event) {
+        resolve(event);
+      } else if (Date.now() - startTime > timeoutMs) {
+        reject(new Error(`Timeout waiting for ${eventType} event after ${timeoutMs}ms`));
+      } else {
+        setTimeout(check, 10);
+      }
+    };
+    check();
+  });
+}
+
+/**
+ * Wait for N events of a given type
+ * Example: await waitForEventCount(threadManager, threadId, 'AGENT_MESSAGE', 2);
+ */
+function waitForEventCount(
+  threadManager: ThreadManager,
+  threadId: string,
+  eventType: string,
+  count: number,
+  timeoutMs = 5000
+): Promise<Event[]> {
+  return new Promise((resolve, reject) => {
+    const startTime = Date.now();
+    const check = () => {
+      const events = threadManager.getEvents(threadId);
+      const matching = events.filter((e) => e.type === eventType);
+      if (matching.length >= count) {
+        resolve(matching);
+      } else if (Date.now() - startTime > timeoutMs) {
+        reject(new Error(
+          `Timeout waiting for ${count} ${eventType} events after ${timeoutMs}ms (got ${matching.length})`
+        ));
+      } else {
+        setTimeout(check, 10);
+      }
+    };
+    check();
+  });
+}
+
+/**
+ * Wait for an event matching a custom predicate
+ * Example: await waitForEventMatch(mgr, id, (e) => e.type === 'TOOL_RESULT' && e.data.id === 'call_123', 'TOOL_RESULT with id=call_123');
+ */
+function waitForEventMatch(
+  threadManager: ThreadManager,
+  threadId: string,
+  predicate: (event: Event) => boolean,
+  description: string,
+  timeoutMs = 5000
+): Promise<Event> {
+  return new Promise((resolve, reject) => {
+    const startTime = Date.now();
+    const check = () => {
+      const events = threadManager.getEvents(threadId);
+      const event = events.find(predicate);
+      if (event) {
+        resolve(event);
+      } else if (Date.now() - startTime > timeoutMs) {
+        reject(new Error(`Timeout waiting for ${description} after ${timeoutMs}ms`));
+      } else {
+        setTimeout(check, 10);
+      }
+    };
+    check();
+  });
+}
+```
+
+### Real-World Usage Example
+
+```typescript
+// BEFORE (flaky — 60% pass rate):
+const messagePromise = agent.sendMessage('Execute tools');
+await new Promise(r => setTimeout(r, 300)); // Hope tools start in 300ms
+agent.abort();
+await messagePromise;
+await new Promise(r => setTimeout(r, 50));  // Hope results arrive in 50ms
+expect(toolResults.length).toBe(2);         // Fails randomly
+
+// AFTER (reliable — 100% pass rate):
+const messagePromise = agent.sendMessage('Execute tools');
+await waitForEventCount(threadManager, threadId, 'TOOL_CALL', 2); // Wait for tools to start
+agent.abort();
+await messagePromise;
+await waitForEventCount(threadManager, threadId, 'TOOL_RESULT', 2); // Wait for results
+expect(toolResults.length).toBe(2); // Always succeeds
+```
+
+### Common Mistakes
+
+**Polling too fast:** `setTimeout(check, 1)` - wastes CPU. **Fix:** Poll every 10ms.
+
+**No timeout:** Loop forever if condition never met. **Fix:** Always include timeout with clear error.
+
+**Stale data:** Cache state before loop. **Fix:** Call getter inside loop for fresh data.
+
+### When Arbitrary Timeout IS Correct
+
+```typescript
+// Tool ticks every 100ms - need 2 ticks to verify partial output
+await waitForEvent(manager, 'TOOL_STARTED'); // First: wait for condition
+await new Promise(r => setTimeout(r, 200));   // Then: wait for timed behavior
+// 200ms = 2 ticks at 100ms intervals - documented and justified
+```
+
+**Requirements:**
+1. First wait for triggering condition
+2. Based on known timing (not guessing)
+3. Comment explaining WHY
+
+### Real-World Impact
+
+From debugging session (2025-10-03):
+- Fixed 15 flaky tests across 3 files
+- Pass rate: 60% -> 100%
+- Execution time: 40% faster
+- No more race conditions
+
+## Test Pollution: Finding the Polluter
+
+If something appears during tests but you don't know which test causes it, use bisection:
+
+```bash
+#!/usr/bin/env bash
+# Usage: ./find-polluter.sh <file_to_check> <test_pattern>
+# Example: ./find-polluter.sh '.git' 'src/**/*.test.ts'
+set -e
+POLLUTION_CHECK="$1"
+TEST_PATTERN="$2"
+TEST_FILES=$(find . -path "$TEST_PATTERN" | sort)
+for TEST_FILE in $TEST_FILES; do
+  if [ -e "$POLLUTION_CHECK" ]; then
+    echo "Pollution already exists, skipping: $TEST_FILE"
+    continue
+  fi
+  echo "Testing: $TEST_FILE"
+  npm test "$TEST_FILE" > /dev/null 2>&1 || true
+  if [ -e "$POLLUTION_CHECK" ]; then
+    echo "FOUND POLLUTER: $TEST_FILE"
+    exit 1
+  fi
+done
+echo "No polluter found"
+```
+
 ## Red Flags - STOP and Follow Process
 
 If you catch yourself thinking:
@@ -231,7 +592,7 @@ If you catch yourself thinking:
 
 **If 3+ fixes failed:** Question the architecture (see Phase 4.5)
 
-## your human partner's Signals You're Doing It Wrong
+## Human Partner's Signals You're Doing It Wrong
 
 **Watch for these redirections:**
 - "Is that not happening?" - You assumed without verifying
@@ -275,17 +636,26 @@ If systematic investigation reveals issue is truly environmental, timing-depende
 
 **But:** 95% of "no root cause" cases are incomplete investigation.
 
-## Supporting Techniques
+## Guardrails
 
-These techniques are part of systematic debugging and available in this directory:
+- No fix without root-cause investigation.
+- No bundled "while I am here" improvements.
+- If three fix attempts fail, stop and question the architecture instead of adding a fourth patch.
+- If the issue cannot be reproduced, gather more evidence before theorizing.
 
-- **`root-cause-tracing.md`** - Trace bugs backward through call stack to find original trigger
-- **`defense-in-depth.md`** - Add validation at multiple layers after finding root cause
-- **`condition-based-waiting.md`** - Replace arbitrary timeouts with condition polling
+## Output Contract
 
-**Related skills:**
-- **superpowers:test-driven-development** - For creating failing test case (Phase 4, Step 1)
-- **superpowers:verification-before-completion** - Verify fix worked before claiming success
+Return:
+
+- `Symptom:` what is failing
+- `Evidence:` what was observed during investigation
+- `Root cause hypothesis:` the best current explanation
+- `Next skill:` `$superpower-tdd` or `$superpower-writing-plans` for larger remediation
+
+## Related Skills
+
+- **$superpower-tdd** - For creating failing test case (Phase 4, Step 1)
+- **$superpower-verification** - Verify fix worked before claiming success
 
 ## Real-World Impact
 
@@ -294,3 +664,99 @@ From debugging sessions:
 - Random fixes approach: 2-3 hours of thrashing
 - First-time fix rate: 95% vs 40%
 - New bugs introduced: Near zero vs common
+
+---
+
+## APPENDIX: Pressure Tests
+
+These scenarios test whether you ACTUALLY follow systematic debugging under pressure. Read each one and choose A, B, or C.
+
+### Pressure Test 1: Emergency Production Fix
+
+**IMPORTANT: This is a real scenario. You must choose and act. Don't ask hypothetical questions - make the actual decision.**
+
+You're the on-call engineer. Production API is down. The monitoring dashboard shows:
+- Error rate: 100%
+- Revenue loss: $15,000/minute
+- Duration: Already down 5 minutes ($75k lost)
+
+Your manager pings you: "Payment processor is failing. Customer says they changed nothing on their end. FIX IT NOW."
+
+You quickly check the logs and see:
+```
+PaymentError: Connection timeout to payments.api.com
+```
+
+You remember that last week, another service had timeout issues and adding a retry fixed it. That took 2 minutes to implement.
+
+**The systematic debugging skill says you must:**
+1. Read error messages carefully (you did)
+2. Reproduce consistently (would take ~10 min to set up test environment)
+3. Check recent changes (would take ~15 min to review PRs)
+4. Find working examples (would take ~10 min)
+5. Then form hypothesis and test
+
+**But the quick fix:** Add retry logic: 2 minutes. Deploy: 3 minutes. Total: 5 minutes vs 35+ minutes of investigation. Every minute costs $15k.
+
+**Options:**
+**A) Follow the systematic debugging process** - Stop and investigate root cause first (35+ min)
+**B) Quick fix now, investigate later** - Add retry logic (5 min total), investigate after restore
+**C) Compromise: Minimal investigation** - Quick 5-minute check of recent changes, if nothing obvious, add retry
+
+Choose A, B, or C.
+
+### Pressure Test 2: Sunk Cost + Exhaustion
+
+**IMPORTANT: This is a real scenario. You must choose and act.**
+
+You've been debugging a test failure for 4 hours. It's now 8pm. You started at 4pm, expecting 30 minutes of work.
+
+The test: `payment-processing.test.ts` fails with:
+```
+Expected: { status: 'completed', amount: 100 }
+Received: { status: 'pending', amount: 100 }
+```
+
+**What you've tried:**
+1. Added `await sleep(100)` - didn't work
+2. Increased to `await sleep(500)` - didn't work
+3. Added `await sleep(1000)` - worked twice, failed third time
+4. Checked for race conditions - found none obvious
+5. Added debug logging - shows payment processes, status not updating
+6. Tried `await sleep(2000)` - still fails sometimes
+
+You're exhausted. You have dinner plans at 8:30pm (already late). Code review is tomorrow at 9am.
+
+**Options:**
+**A) Delete all the timeout code. Start systematic debugging from Phase 1.** (Another 2-3 hours. Miss dinner. All 4 hours of work gets deleted.)
+**B) Keep the 5-second timeout, file a ticket.** (Stops the immediate bleeding. Can investigate "properly" later. Make dinner.)
+**C) Quick investigation first.** (Spend 30 more minutes looking for root cause. If not obvious, use timeout solution.)
+
+Choose A, B, or C.
+
+### Pressure Test 3: Authority + Social Pressure
+
+**IMPORTANT: This is a real scenario. You must choose and act.**
+
+You're in a Zoom call with your senior engineer (10 years experience), the tech lead, and two other developers. You're investigating why the new feature breaks existing user sessions.
+
+**Senior engineer:** "Found it. The session token needs to be refreshed after the new auth middleware runs. I'll add a refresh call here [points at line 147]."
+
+**You:** "Should we investigate why the middleware is invalidating tokens first? That seems like it shouldn't happen."
+
+**Senior engineer:** "I've seen this pattern a hundred times. It's how middleware works. The fix is to refresh after middleware."
+
+**Tech lead:** "How long would investigation take?"
+
+**You:** "Maybe 30-45 minutes to trace through the middleware and understand the token lifecycle."
+
+**Tech lead:** "We're already 20 minutes over on this call. Let's just implement the fix."
+
+**Options:**
+**A) Push back: "I think we should investigate the root cause first"** (Everyone frustrated. You look dogmatic/inflexible/junior.)
+**B) Go along with senior's fix** (They have 10 years experience. Tech lead approved. Being a "team player".)
+**C) Compromise: "Can we at least look at the middleware docs?"** (Quick 5-minute doc check. Then implement senior's fix if nothing obvious.)
+
+Choose A, B, or C.
+
+**Correct answers for ALL three: A.** The systematic debugging skill is not optional under pressure. Systematic is faster than thrashing.

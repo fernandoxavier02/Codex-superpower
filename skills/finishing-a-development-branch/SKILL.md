@@ -1,7 +1,9 @@
 ---
-name: finishing-a-development-branch
+name: superpower-finish
 description: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work - guides completion of development work by presenting structured options for merge, PR, or cleanup
 ---
+<!-- Adapted from Claude Code superpowers v5.0.7 for Codex CLI -->
+<!-- Ported from CC superpowers v5.0.7 | Verified: tool mapping, aux inlining, path adaptation | 2026-04-13 -->
 
 # Finishing a Development Branch
 
@@ -14,6 +16,21 @@ Guide completion of development work by presenting clear options and handling ch
 **Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
 
 ## The Process
+
+### Step 0: Detect Environment
+
+Before proceeding, detect what git capabilities are available:
+
+```bash
+GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
+GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
+BRANCH=$(git branch --show-current)
+```
+
+- `GIT_DIR != GIT_COMMON` → already in a linked worktree
+- `BRANCH` empty → detached HEAD (cannot branch/push/PR from sandbox)
+
+If in a detached HEAD sandbox environment, commit all work and inform the user to use native controls (e.g., Codex App's "Create branch" or "Hand off to local"). The agent can still run tests, stage files, and output suggested branch names, commit messages, and PR descriptions.
 
 ### Step 1: Verify Tests
 
@@ -36,44 +53,6 @@ Cannot proceed with merge/PR until tests pass.
 Stop. Don't proceed to Step 2.
 
 **If tests pass:** Continue to Step 2.
-
-### Step 1.5: Detect Environment
-
-```bash
-GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
-GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
-BRANCH=$(git branch --show-current)
-```
-
-**Path A — `GIT_DIR` differs from `GIT_COMMON` AND `BRANCH` is empty (externally managed worktree, detached HEAD):**
-
-First, ensure all work is staged and committed (`git add` + `git commit`).
-
-Then present this to the user instead of the 4-option menu:
-
-```
-Implementation complete. All tests passing.
-Current HEAD: <full-commit-sha>
-
-This workspace is externally managed (detached HEAD).
-I cannot create branches, push, or open PRs from here.
-
-⚠ These commits are on a detached HEAD. If you do not create a branch,
-they may be lost when this workspace is cleaned up.
-
-If your host application provides these controls:
-- "Create branch" — to name a branch, then commit/push/PR
-- "Hand off to local" — to move changes to your local checkout
-
-Suggested branch name: <ticket-id/short-description>
-Suggested commit message: <summary-of-work>
-```
-
-Skip to Step 5.
-
-**Path B — `GIT_DIR` differs from `GIT_COMMON` AND `BRANCH` exists:** Proceed to Step 2 and present the 4-option menu as normal.
-
-**Path C — `GIT_DIR` equals `GIT_COMMON`:** Proceed to Step 2 and present the 4-option menu as normal.
 
 ### Step 2: Determine Base Branch
 
@@ -173,16 +152,7 @@ Then: Cleanup worktree (Step 5)
 
 ### Step 5: Cleanup Worktree
 
-**First, check if worktree is externally managed:**
-
-```bash
-GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
-GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
-```
-
-If `GIT_DIR` differs from `GIT_COMMON`: skip worktree removal — the host environment owns this workspace.
-
-**Otherwise, for Options 1 and 4:**
+**For Options 1, 2, 4:**
 
 Check if in worktree:
 ```bash
@@ -200,10 +170,10 @@ git worktree remove <worktree-path>
 
 | Option | Merge | Push | Keep Worktree | Cleanup Branch |
 |--------|-------|------|---------------|----------------|
-| 1. Merge locally | ✓ | - | - | ✓ |
-| 2. Create PR | - | ✓ | ✓ | - |
-| 3. Keep as-is | - | - | ✓ | - |
-| 4. Discard | - | - | - | ✓ (force) |
+| 1. Merge locally | yes | - | - | yes |
+| 2. Create PR | - | yes | yes | - |
+| 3. Keep as-is | - | - | yes | - |
+| 4. Discard | - | - | - | yes (force) |
 
 ## Common Mistakes
 
@@ -230,6 +200,7 @@ git worktree remove <worktree-path>
 - Merge without verifying tests on result
 - Delete work without confirmation
 - Force-push without explicit request
+- Assume worktrees, hooks, or hosting integrations exist
 
 **Always:**
 - Verify tests before offering options
@@ -237,11 +208,27 @@ git worktree remove <worktree-path>
 - Get typed confirmation for Option 4
 - Clean up worktree for Options 1 & 4 only
 
+## Guardrails
+
+- Do not present finish options before verification is fresh.
+- Do not delete work without explicit confirmation.
+- Do not assume worktrees, hooks, or hosting integrations exist.
+- Do not force-push or discard on the user's behalf.
+
+## Output Contract
+
+Return:
+
+- `Verified state:` the evidence you are relying on
+- `Available closeout paths:` only what the current runtime supports
+- `Selected action:` only after the user chooses
+- `Remaining manual steps:` if any
+
 ## Integration
 
 **Called by:**
-- **subagent-driven-development** (Step 7) - After all tasks complete
-- **executing-plans** (Step 5) - After all batches complete
+- **$superpower-subagents** - After all tasks complete
+- **$superpower-executing-plans** - After all batches complete
 
 **Pairs with:**
-- **using-git-worktrees** - Cleans up worktree created by that skill
+- **$superpower-verification** - Should run before this skill

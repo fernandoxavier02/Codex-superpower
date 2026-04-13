@@ -1,7 +1,9 @@
 ---
-name: verification-before-completion
+name: superpower-verification
 description: Use when about to claim work is complete, fixed, or passing, before committing or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always
 ---
+<!-- Adapted from Claude Code superpowers v5.0.7 for Codex CLI -->
+<!-- Ported from CC superpowers v5.0.7 | Verified: no tool mapping needed, no aux files, emoji→text adaptation | 2026-04-13 -->
 
 # Verification Before Completion
 
@@ -77,42 +79,42 @@ Skip any step = lying, not verifying
 
 **Tests:**
 ```
-✅ [Run test command] [See: 34/34 pass] "All tests pass"
-❌ "Should pass now" / "Looks correct"
+CORRECT: [Run test command] [See: 34/34 pass] "All tests pass"
+WRONG:   "Should pass now" / "Looks correct"
 ```
 
 **Regression tests (TDD Red-Green):**
 ```
-✅ Write → Run (pass) → Revert fix → Run (MUST FAIL) → Restore → Run (pass)
-❌ "I've written a regression test" (without red-green verification)
+CORRECT: Write → Run (pass) → Revert fix → Run (MUST FAIL) → Restore → Run (pass)
+WRONG:   "I've written a regression test" (without red-green verification)
 ```
 
 **Build:**
 ```
-✅ [Run build] [See: exit 0] "Build passes"
-❌ "Linter passed" (linter doesn't check compilation)
+CORRECT: [Run build] [See: exit 0] "Build passes"
+WRONG:   "Linter passed" (linter doesn't check compilation)
 ```
 
 **Requirements:**
 ```
-✅ Re-read plan → Create checklist → Verify each → Report gaps or completion
-❌ "Tests pass, phase complete"
+CORRECT: Re-read plan → Create checklist → Verify each → Report gaps or completion
+WRONG:   "Tests pass, phase complete"
 ```
 
 **Agent delegation:**
 ```
-✅ Agent reports success → Check VCS diff → Verify changes → Report actual state
-❌ Trust agent report
+CORRECT: Agent reports success → Check VCS diff → Verify changes → Report actual state
+WRONG:   Trust agent report
 ```
 
 ## Why This Matters
 
-From 24 failure memories:
-- your human partner said "I don't believe you" - trust broken
+From failure memories:
+- "I don't believe you" - trust broken
 - Undefined functions shipped - would crash
 - Missing requirements shipped - incomplete features
 - Time wasted on false completion → redirect → rework
-- Violates: "Honesty is a core value. If you lie, you'll be replaced."
+- Violates: "Honesty is a core value."
 
 ## When To Apply
 
@@ -137,3 +139,21 @@ From 24 failure memories:
 Run the command. Read the output. THEN claim the result.
 
 This is non-negotiable.
+
+## Guardrails
+
+- Do not claim success, completion, or correctness without fresh verification evidence from this message.
+- Do not use hedging words ("should", "probably", "seems to") as substitutes for running commands.
+- Do not trust agent success reports — verify independently via VCS diff and test output.
+- Do not treat partial verification (linter only, single test file) as full verification.
+- Do not express satisfaction ("Great!", "Perfect!", "Done!") before verification output is read.
+- Do not commit, push, or create PRs without running the full verification gate.
+
+## Output Contract
+
+Return:
+
+- `Claim:` the specific assertion being made
+- `Command:` the verification command that was run
+- `Evidence:` exit code, pass/fail counts, or relevant output
+- `Status:` VERIFIED or FAILED with actual state

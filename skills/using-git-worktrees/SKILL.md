@@ -1,7 +1,11 @@
 ---
-name: using-git-worktrees
+name: superpower-git-worktrees
 description: Use when starting feature work that needs isolation from current workspace or before executing implementation plans - creates isolated git worktrees with smart directory selection and safety verification
 ---
+
+<!-- Adapted from Claude Code superpowers v5.0.7 for Codex CLI -->
+<!-- Ported from CC superpowers v5.0.7 | Verified: tool mapping, aux inlining, path adaptation | 2026-04-13 -->
+<!-- Tool mapping: AskUserQuestion -> SendMessage -->
 
 # Using Git Worktrees
 
@@ -12,30 +16,6 @@ Git worktrees create isolated workspaces sharing the same repository, allowing w
 **Core principle:** Systematic directory selection + safety verification = reliable isolation.
 
 **Announce at start:** "I'm using the using-git-worktrees skill to set up an isolated workspace."
-
-## Step 0: Check if Already in an Isolated Workspace
-
-Before creating a worktree, check if one already exists:
-
-```bash
-GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
-GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
-BRANCH=$(git branch --show-current)
-```
-
-**If `GIT_DIR` differs from `GIT_COMMON`:** You are already inside a linked worktree created by something else. Do NOT create another worktree. Instead:
-
-1. Run project setup as described in "Run Project Setup" below
-2. Verify clean baseline as described in "Verify Clean Baseline" below
-3. Report with branch state:
-   - On a branch: "Already in an isolated workspace at `<path>` on branch `<name>`. Tests passing. Ready to implement."
-   - Detached HEAD: "Already in an isolated workspace at `<path>` (detached HEAD, externally managed). Tests passing. Note: branch creation needed at finish time. Ready to implement."
-
-After reporting, STOP. Do not continue to Directory Selection or Creation Steps.
-
-**If `GIT_DIR` equals `GIT_COMMON`:** Proceed with the full worktree creation flow below.
-
-**Sandbox fallback:** If `git worktree add -b` fails with a permission error while following the Creation Steps, treat it as a late-detected restricted environment. Fall back to the behavior above: run setup and baseline tests in the current directory, report accordingly, and STOP.
 
 ## Directory Selection Process
 
@@ -54,20 +34,22 @@ ls -d worktrees 2>/dev/null      # Alternative
 ### 2. Check Project Instructions
 
 ```bash
-grep -i "worktree.*director" AGENTS.md CLAUDE.md GEMINI.md 2>/dev/null
+grep -i "worktree.*director" AGENTS.md 2>/dev/null
+grep -i "worktree.*director" codex.md 2>/dev/null
+grep -i "worktree.*director" AGENTS.md 2>/dev/null
 ```
 
-**If preference specified in project instructions:** Use it without asking.
+**If preference specified:** Use it without asking.
 
 ### 3. Ask User
 
-If no directory exists and no project-instructions preference:
+If no directory exists and no preference found:
 
 ```
 No worktree directory found. Where should I create worktrees?
 
 1. .worktrees/ (project-local, hidden)
-2. ~/.config/superpowers/worktrees/<project-name>/ (global location)
+2. ~/.config/codex/worktrees/<project-name>/ (global location)
 
 Which would you prefer?
 ```
@@ -85,14 +67,13 @@ git check-ignore -q .worktrees 2>/dev/null || git check-ignore -q worktrees 2>/d
 
 **If NOT ignored:**
 
-Per Jesse's rule "Fix broken things immediately":
 1. Add appropriate line to .gitignore
 2. Commit the change
 3. Proceed with worktree creation
 
 **Why critical:** Prevents accidentally committing worktree contents to repository.
 
-### For Global Directory (~/.config/superpowers/worktrees)
+### For Global Directory (~/.config/codex/worktrees)
 
 No .gitignore verification needed - outside project entirely.
 
@@ -112,8 +93,8 @@ case $LOCATION in
   .worktrees|worktrees)
     path="$LOCATION/$BRANCH_NAME"
     ;;
-  ~/.config/superpowers/worktrees/*)
-    path="~/.config/superpowers/worktrees/$project/$BRANCH_NAME"
+  ~/.config/codex/worktrees/*)
+    path="~/.config/codex/worktrees/$project/$BRANCH_NAME"
     ;;
 esac
 
@@ -172,7 +153,7 @@ Ready to implement <feature-name>
 | `.worktrees/` exists | Use it (verify ignored) |
 | `worktrees/` exists | Use it (verify ignored) |
 | Both exist | Use `.worktrees/` |
-| Neither exists | Check project instructions → Ask user |
+| Neither exists | Check project instructions -> Ask user |
 | Directory not ignored | Add to .gitignore + commit |
 | Tests fail during baseline | Report failures + ask |
 | No package.json/Cargo.toml | Skip dependency install |
@@ -187,7 +168,7 @@ Ready to implement <feature-name>
 ### Assuming directory location
 
 - **Problem:** Creates inconsistency, violates project conventions
-- **Fix:** Follow priority: existing > CLAUDE.md > ask
+- **Fix:** Follow priority: existing > project instructions > ask
 
 ### Proceeding with failing tests
 
@@ -210,7 +191,7 @@ You: I'm using the using-git-worktrees skill to set up an isolated workspace.
 [Run npm install]
 [Run npm test - 47 passing]
 
-Worktree ready at /Users/jesse/myproject/.worktrees/auth
+Worktree ready at /Users/dev/myproject/.worktrees/auth
 Tests passing (47 tests, 0 failures)
 Ready to implement auth feature
 ```
@@ -225,18 +206,37 @@ Ready to implement auth feature
 - Skip project instructions check
 
 **Always:**
-- Follow directory priority: existing > CLAUDE.md > ask
+- Follow directory priority: existing > project instructions > ask
 - Verify directory is ignored for project-local
 - Auto-detect and run project setup
 - Verify clean test baseline
 
+## Guardrails
+
+- Do not create a project-local worktree without verifying the directory is gitignored first.
+- Do not assume directory location — follow priority: existing > project instructions > ask user.
+- Do not proceed with a failing baseline test suite without reporting and getting explicit permission.
+- Do not hardcode setup commands — auto-detect from project files (package.json, Cargo.toml, etc.).
+- Do not skip project instructions check (AGENTS.md, codex.md) before asking the user.
+
+## Output Contract
+
+Return:
+
+- `Worktree location:` full path to the created worktree
+- `Gitignore verified:` yes/no, action taken if not ignored
+- `Setup commands:` what was auto-detected and run
+- `Baseline tests:` pass count and failure count
+- `Status:` "Ready to implement [feature]" or "Blocked: [reason]"
+- `Next skill:` `$superpower-executing-plans` or `$superpower-subagents`
+
 ## Integration
 
 **Called by:**
-- **brainstorming** - REQUIRED: Ensures isolated workspace (creates one or verifies existing)
-- **subagent-driven-development** - REQUIRED: Ensures isolated workspace (creates one or verifies existing)
-- **executing-plans** - REQUIRED: Ensures isolated workspace (creates one or verifies existing)
+- `$superpower-brainstorming` (Phase 4) - REQUIRED when design is approved and implementation follows
+- `$superpower-subagents` - REQUIRED before executing any tasks
+- `$superpower-executing-plans` - REQUIRED before executing any tasks
 - Any skill needing isolated workspace
 
 **Pairs with:**
-- **finishing-a-development-branch** - REQUIRED for cleanup after work complete
+- `$superpower-finish` - REQUIRED for cleanup after work complete

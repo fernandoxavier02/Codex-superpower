@@ -1,7 +1,17 @@
 ---
-name: dispatching-parallel-agents
-description: Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies
+name: superpower-dispatching-parallel
+description: Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies - dispatch one spawn_agent per independent problem domain for concurrent resolution
 ---
+
+<!-- Adapted from Claude Code superpowers v5.0.7 for Codex CLI -->
+<!-- Tool mapping: Task/Agent tool -> spawn_agent | TodoWrite -> update_plan -->
+
+<MANDATORY-SUBAGENT-RULE>
+YOU MUST call `spawn_agent` for EACH independent problem domain — do NOT investigate sequentially.
+YOU MUST verify all agent changes after they return — run the full test suite.
+NEVER dispatch agents for related failures (fix one might fix others).
+NEVER let agents work on shared state or the same files.
+</MANDATORY-SUBAGENT-RULE>
 
 # Dispatching Parallel Agents
 
@@ -15,22 +25,13 @@ When you have multiple unrelated failures (different test files, different subsy
 
 ## When to Use
 
-```dot
-digraph when_to_use {
-    "Multiple failures?" [shape=diamond];
-    "Are they independent?" [shape=diamond];
-    "Single agent investigates all" [shape=box];
-    "One agent per problem domain" [shape=box];
-    "Can they work in parallel?" [shape=diamond];
-    "Sequential agents" [shape=box];
-    "Parallel dispatch" [shape=box];
-
-    "Multiple failures?" -> "Are they independent?" [label="yes"];
-    "Are they independent?" -> "Single agent investigates all" [label="no - related"];
-    "Are they independent?" -> "Can they work in parallel?" [label="yes"];
-    "Can they work in parallel?" -> "Parallel dispatch" [label="yes"];
-    "Can they work in parallel?" -> "Sequential agents" [label="no - shared state"];
-}
+```
+Multiple failures? ──yes──> Are they independent? ──yes──> Can they work in parallel?
+                                    │                              │           │
+                                   no                             yes         no
+                                    │                              │           │
+                            Single agent                   Parallel       Sequential
+                            investigates all               dispatch       agents
 ```
 
 **Use when:**
@@ -65,13 +66,16 @@ Each agent gets:
 
 ### 3. Dispatch in Parallel
 
-```typescript
-// In Claude Code / AI environment
-Task("Fix agent-tool-abort.test.ts failures")
-Task("Fix batch-completion-behavior.test.ts failures")
-Task("Fix tool-approval-race-conditions.test.ts failures")
+Use `spawn_agent` for each independent domain:
+
+```
+spawn_agent("Fix agent-tool-abort.test.ts failures")
+spawn_agent("Fix batch-completion-behavior.test.ts failures")
+spawn_agent("Fix tool-approval-race-conditions.test.ts failures")
 // All three run concurrently
 ```
+
+**Codex note:** `spawn_agent` is the Codex CLI dispatch mechanism. Each spawned agent gets isolated context and works independently.
 
 ### 4. Review and Integrate
 
@@ -111,26 +115,21 @@ Return: Summary of what you found and what you fixed.
 
 ## Common Mistakes
 
-**❌ Too broad:** "Fix all the tests" - agent gets lost
-**✅ Specific:** "Fix agent-tool-abort.test.ts" - focused scope
-
-**❌ No context:** "Fix the race condition" - agent doesn't know where
-**✅ Context:** Paste the error messages and test names
-
-**❌ No constraints:** Agent might refactor everything
-**✅ Constraints:** "Do NOT change production code" or "Fix tests only"
-
-**❌ Vague output:** "Fix it" - you don't know what changed
-**✅ Specific:** "Return summary of root cause and changes"
+| Mistake | Fix |
+|---------|-----|
+| Too broad: "Fix all the tests" | Specific: "Fix agent-tool-abort.test.ts" |
+| No context: "Fix the race condition" | Paste error messages and test names |
+| No constraints: Agent might refactor everything | "Do NOT change production code" or "Fix tests only" |
+| Vague output: "Fix it" | "Return summary of root cause and changes" |
 
 ## When NOT to Use
 
-**Related failures:** Fixing one might fix others - investigate together first
-**Need full context:** Understanding requires seeing entire system
-**Exploratory debugging:** You don't know what's broken yet
-**Shared state:** Agents would interfere (editing same files, using same resources)
+- **Related failures:** Fixing one might fix others - investigate together first
+- **Need full context:** Understanding requires seeing entire system
+- **Exploratory debugging:** You don't know what's broken yet
+- **Shared state:** Agents would interfere (editing same files, using same resources)
 
-## Real Example from Session
+## Real Example
 
 **Scenario:** 6 test failures across 3 files after major refactoring
 
@@ -143,9 +142,9 @@ Return: Summary of what you found and what you fixed.
 
 **Dispatch:**
 ```
-Agent 1 → Fix agent-tool-abort.test.ts
-Agent 2 → Fix batch-completion-behavior.test.ts
-Agent 3 → Fix tool-approval-race-conditions.test.ts
+spawn_agent("Fix agent-tool-abort.test.ts — 3 timing failures")
+spawn_agent("Fix batch-completion-behavior.test.ts — 2 tool execution failures")
+spawn_agent("Fix tool-approval-race-conditions.test.ts — 1 race condition failure")
 ```
 
 **Results:**
@@ -172,11 +171,64 @@ After agents return:
 3. **Run full suite** - Verify all fixes work together
 4. **Spot check** - Agents can make systematic errors
 
-## Real-World Impact
+## Integration
 
-From debugging session (2025-10-03):
-- 6 failures across 3 files
-- 3 agents dispatched in parallel
-- All investigations completed concurrently
-- All fixes integrated successfully
-- Zero conflicts between agent changes
+**Called by:**
+- `$superpower-debugging` - when multiple independent failures detected
+- `$superpower-executing-plans` - when plan has independent tasks
+- `$superpower-subagents` - as the core dispatch mechanism
+
+**Pairs with:**
+- `$superpower-verification` - verify all agent changes after integration
+
+---
+
+## Self-Check Before Responding
+
+**STOP before claiming dispatch is complete. Verify ALL of these:**
+
+- [ ] Did I call `spawn_agent` for EACH independent domain? (Not implemented inline)
+- [ ] Did all agents run in parallel? (Not dispatched sequentially one-at-a-time)
+- [ ] Did I collect and review ALL agent results before proceeding?
+- [ ] Did I check for conflicts between agent changes? (Same files, shared state)
+- [ ] Did I run the FULL test suite after integrating all changes?
+- [ ] Did I report what each agent found and fixed?
+
+**If ANY checkbox is unchecked, you are NOT done. Go back and complete it.**
+
+## Forbidden Anti-Patterns (GPT Rationalizations)
+
+These rationalizations are NOT acceptable. If you catch yourself thinking any of these, STOP:
+
+| Forbidden Rationalization | Why It's Wrong |
+|--------------------------|----------------|
+| "I chose the conservative approach" | Conservative = sequential = wasting time. Dispatch in parallel. |
+| "To save time I'll do it inline" | Inline is SLOWER for independent problems. Dispatch agents. |
+| "The task is simple enough to handle myself" | Simple tasks still benefit from parallel dispatch when there are multiple. |
+| "I'll dispatch one agent first to see if it works" | This is sequential dispatch. Send ALL agents at once. |
+| "These failures might be related" | If you haven't PROVEN they're related, treat them as independent. |
+| "I can do all three faster than dispatching agents" | You cannot. Parallel is always faster for independent work. |
+| "Let me investigate first, then dispatch" | Investigation IS the agent's job. Dispatch with investigation instructions. |
+| "One agent can handle all of these" | One agent = sequential. Multiple independent domains = multiple agents. |
+
+**All of these mean: STOP rationalizing and dispatch `spawn_agent` for each domain.**
+
+## Guardrails
+
+- Do not investigate independent problems sequentially — dispatch one `spawn_agent` per domain.
+- Do not dispatch agents for related failures where fixing one might fix others.
+- Do not let agents work on shared state or the same files.
+- Do not trust agent success reports without independently verifying via VCS diff and full test suite.
+- Do not dispatch agents one-at-a-time to "test first" — send all agents at once for independent domains.
+- Do not proceed without reviewing all agent results and checking for conflicts.
+
+## Output Contract
+
+Return:
+
+- `Domains identified:` list of independent problem domains
+- `Agents dispatched:` count and scope of each `spawn_agent`
+- `Agent results:` per-agent summary of findings and fixes
+- `Conflict check:` whether agents edited same files or shared state
+- `Full suite result:` test suite output after integrating all changes
+- `Next skill:` `$superpower-verification`

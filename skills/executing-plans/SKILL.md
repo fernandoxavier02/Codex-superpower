@@ -1,7 +1,17 @@
 ---
-name: executing-plans
+name: superpower-executing-plans
 description: Use when you have a written implementation plan to execute in a separate session with review checkpoints
 ---
+<!-- Adapted from Claude Code superpowers v5.0.7 for Codex CLI -->
+<!-- Ported from CC superpowers v5.0.7 | Verified: tool mapping, aux inlining, path adaptation | 2026-04-13 -->
+
+<MANDATORY-EXECUTION-RULE>
+YOU MUST review the plan critically before executing any task.
+YOU MUST use `update_plan` to track progress on every task.
+YOU MUST run verifications as specified in the plan after each task.
+YOU MUST stop and ask for clarification when blocked — do not guess.
+NEVER skip plan review. NEVER mark tasks complete without verification. NEVER start on main/master without explicit consent.
+</MANDATORY-EXECUTION-RULE>
 
 # Executing Plans
 
@@ -9,48 +19,31 @@ description: Use when you have a written implementation plan to execute in a sep
 
 Load plan, review critically, execute all tasks, report when complete.
 
-This skill provides **skill-level execution checkpoints**, not the full local pipeline.
-It does **not** imply adaptive batch execution, per-batch adversarial review, sanity-checker closure,
-or Go/No-Go style validation. Those belong to the local Codex pipeline, not to `executing-plans`.
-
 **Announce at start:** "I'm using the executing-plans skill to implement this plan."
 
-**Codex note:** use `update_plan` for visible task tracking and enable `[features] multi_agent = true` in `~/.codex/config.toml` before relying on subagents.
-
-**Fresh-session note:** This skill is ideal when a plan markdown file is being used as the primary handoff artifact for a new session. Treat the plan document as the authoritative context instead of rebuilding the whole conversation history.
-
-**Note:** Tell your human partner that Superpowers works much better with access to subagents. The quality of its work will be significantly higher if run on a platform with subagent support (such as Claude Code or Codex). If subagents are available, use superpowers:subagent-driven-development instead of this skill.
+**Note:** Tell your human partner that Superpowers works much better with access to subagents. The quality of its work will be significantly higher if run on a platform with subagent support. If subagents are available, use $superpower-subagents instead of this skill.
 
 ## The Process
 
 ### Step 1: Load and Review Plan
 1. Read plan file
 2. Review critically - identify any questions or concerns about the plan
-3. If concerns or missing decisions: Raise clarifying questions with your human partner before starting
-4. If no concerns: Create TodoWrite (`update_plan` in Codex) from the plan tasks and proceed
+3. If concerns: Raise them with your human partner before starting
+4. If no concerns: Create update_plan entries and proceed
 
 ### Step 2: Execute Tasks
 
 For each task:
-1. Mark as in_progress
+1. Mark as in_progress via update_plan
 2. Follow each step exactly (plan has bite-sized steps)
 3. Run verifications as specified
-4. Mark as completed
-
-Maintain execution in visible stages. The user should be able to see the plan progressing through `update_plan` while you work.
-
-These checkpoints are intentionally lightweight:
-- task-by-task progress visibility
-- required verifications from the written plan
-- stop-and-ask behavior when the plan is incomplete or ambiguous
-
-They are **not** a substitute for the heavier local pipeline orchestration system.
+4. Mark as completed via update_plan
 
 ### Step 3: Complete Development
 
 After all tasks complete and verified:
 - Announce: "I'm using the finishing-a-development-branch skill to complete this work."
-- **REQUIRED SUB-SKILL:** Use superpowers:finishing-a-development-branch
+- **REQUIRED SUB-SKILL:** Use $superpower-finish
 - Follow that skill to verify tests, present options, execute choice
 
 ## When to Stop and Ask for Help
@@ -59,9 +52,7 @@ After all tasks complete and verified:
 - Hit a blocker (missing dependency, test fails, instruction unclear)
 - Plan has critical gaps preventing starting
 - You don't understand an instruction
-- A task or acceptance criterion is ambiguous enough that you would have to invent behavior
 - Verification fails repeatedly
-- A plan step requires a product or technical decision that the plan does not actually define
 
 **Ask for clarification rather than guessing.**
 
@@ -77,27 +68,31 @@ After all tasks complete and verified:
 - Review plan critically first
 - Follow plan steps exactly
 - Don't skip verifications
-- Treat ambiguity as a reason to stop and ask, not as permission to infer hidden requirements
 - Reference skills when plan says to
 - Stop when blocked, don't guess
 - Never start implementation on main/master branch without explicit user consent
 
-## Scope Boundary
+## Guardrails
 
-Use this skill when you already have a written plan and want disciplined execution in a fresh session.
+- Do not begin executing tasks before reviewing the plan critically and resolving concerns.
+- Do not skip verifications specified in the plan steps.
+- Do not guess or force through blockers — stop and ask for clarification.
+- Do not start implementation on main/master branch without explicit user consent.
+- Do not deviate from plan steps; follow each step exactly as written.
+- Do not mark a task as completed without running specified verifications.
 
-Do **not** treat this skill as equivalent to the local pipeline for:
-- task orchestration
-- adaptive batching
-- adversarial per-batch review
-- sanity/final validation gates
-- Go/No-Go decisions
+## Output Contract
 
-If the work needs those heavier controls, hand it off to the local pipeline instead of stretching `executing-plans` beyond its scope.
+Return:
+
+- `Plan reviewed:` concerns raised or "no concerns, proceeding"
+- `Tasks completed:` N/N with per-task verification status
+- `Blockers encountered:` list or "none"
+- `Next skill:` `$superpower-finish`
 
 ## Integration
 
 **Required workflow skills:**
-- **superpowers:using-git-worktrees** - REQUIRED: Ensures isolated workspace (creates one or verifies existing)
-- **superpowers:writing-plans** - Creates the plan this skill executes
-- **superpowers:finishing-a-development-branch** - Complete development after all tasks
+- **$superpower-git-worktrees** - REQUIRED: Set up isolated workspace before starting
+- **$superpower-writing-plans** - Creates the plan this skill executes
+- **$superpower-finish** - Complete development after all tasks

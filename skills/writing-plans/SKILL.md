@@ -1,7 +1,9 @@
 ---
-name: writing-plans
+name: superpower-writing-plans
 description: Use when you have a spec or requirements for a multi-step task, before touching code
 ---
+<!-- Adapted from Claude Code superpowers v5.0.7 for Codex CLI -->
+<!-- Ported from CC superpowers v5.0.7 | Verified: tool mapping, aux inlining, path adaptation | 2026-04-13 -->
 
 # Writing Plans
 
@@ -12,24 +14,6 @@ Write comprehensive implementation plans assuming the engineer has zero context 
 Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
-
-## Codex Execution Note
-
-When operating in Codex, mirror the writing-plans phase explicitly:
-
-- Immediately call `update_plan` with these steps:
-  1. Explore current code for the plan
-  2. Read approved spec
-  3. Check relevant requirements/rules/tests
-  4. Write implementation plan
-  5. Independent plan review loop
-  6. Offer execution choice and wait
-- Keep exactly one step `in_progress` at a time
-- Do not jump straight from "spec approved" to "plan complete"
-- Do not start executing the plan in the same turn that presents the two execution options
-- If the user chooses option 1, first assess whether same-session context is still sufficient; if not, provide a complete next-session prompt using the plan doc
-
-**Context:** This should be run in a dedicated worktree (created by brainstorming skill).
 
 **Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
@@ -65,7 +49,7 @@ This structure informs the task decomposition. Each task should produce self-con
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development for same-session execution or superpowers:executing-plans for fresh-session execution from this document. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use $superpower-subagents (recommended) or $superpower-executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking via update_plan.
 
 **Goal:** [One sentence describing what this builds]
 
@@ -129,29 +113,64 @@ Every step must contain the actual content an engineer needs. These are **plan f
 - Steps that describe what to do without showing how (code blocks required for code steps)
 - References to types, functions, or methods not defined in any task
 
-## Remember
-- Exact file paths always
-- Complete code in every step — if a step changes code, show the code
-- Exact commands with expected output
-- DRY, YAGNI, TDD, frequent commits
+## Self-Review
 
-## Plan Review Loop
+After writing the complete plan, look at the spec with fresh eyes and check the plan against it. This is a checklist you run yourself — not a subagent dispatch.
 
-After writing the complete plan, run an independent plan review before offering execution choices.
+**1. Spec coverage:** Skim each section/requirement in the spec. Can you point to a task that implements it? List any gaps.
 
-1. Dispatch an independent plan reviewer using `plan-document-reviewer-prompt.md`
-2. Give the reviewer the plan path plus the approved spec path
-3. If the reviewer finds blocking issues:
-   - fix the plan document yourself
-   - re-dispatch the reviewer
-   - repeat until the reviewer approves or the loop exceeds 3 iterations
-4. If the loop exceeds 3 iterations, stop and surface the disagreement or blocker to the user
+**2. Placeholder scan:** Search your plan for red flags — any of the patterns from the "No Placeholders" section above. Fix them.
 
-**Reviewer independence requirements:**
+**3. Type consistency:** Do the types, method signatures, and property names you used in later tasks match what you defined in earlier tasks? A function called `clearLayers()` in Task 3 but `clearFullLayers()` in Task 7 is a bug.
 
-- The plan review must be an independent reviewer step, not the coordinator doing another inline self-review
-- The reviewer should check buildability, spec coverage, placeholder content, and whether the tasks are actionable enough for implementation
-- If you disagree with reviewer feedback, explain the disagreement and either resolve it in the plan or surface it to the user
+If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
+
+## Plan Document Review (via subagent, if available)
+
+When dispatching a plan reviewer subagent via `spawn_agent`, use this template:
+
+```
+Your task is to perform the following. Follow the instructions below exactly.
+
+<agent-instructions>
+You are a plan document reviewer. Verify this plan is complete and ready for implementation.
+
+**Plan to review:** [PLAN_FILE_PATH]
+**Spec for reference:** [SPEC_FILE_PATH]
+
+## What to Check
+
+| Category | What to Look For |
+|----------|------------------|
+| Completeness | TODOs, placeholders, incomplete tasks, missing steps |
+| Spec Alignment | Plan covers spec requirements, no major scope creep |
+| Task Decomposition | Tasks have clear boundaries, steps are actionable |
+| Buildability | Could an engineer follow this plan without getting stuck? |
+
+## Calibration
+
+**Only flag issues that would cause real problems during implementation.**
+An implementer building the wrong thing or getting stuck is an issue.
+Minor wording, stylistic preferences, and "nice to have" suggestions are not.
+
+Approve unless there are serious gaps — missing requirements from the spec,
+contradictory steps, placeholder content, or tasks so vague they can't be acted on.
+
+## Output Format
+
+## Plan Review
+
+**Status:** Approved | Issues Found
+
+**Issues (if any):**
+- [Task X, Step Y]: [specific issue] - [why it matters for implementation]
+
+**Recommendations (advisory, do not block approval):**
+- [suggestions for improvement]
+</agent-instructions>
+
+Execute this now. Output ONLY the structured response following the format specified above.
+```
 
 ## Execution Handoff
 
@@ -159,25 +178,37 @@ After saving the plan, offer execution choice:
 
 **"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Two execution options:**
 
-**1. Subagent-Driven (recommended for speed)** - I first assess if there is enough context left in this session; if yes, I stay here and dispatch fresh subagents per task, with review between tasks. If not, I give you a complete next-session prompt based on the plan document.
+**1. Subagent-Driven (recommended)** - I dispatch a fresh subagent per task, review between tasks, fast iteration
 
-**2. Inline Execution** - I execute the tasks sequentially in this same session with checkpoints and visible `update_plan`
+**2. Inline Execution** - Execute tasks in this session using $superpower-executing-plans, batch execution with checkpoints
 
 **Which approach?"**
 
-**If Same Session chosen:**
-- **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development
-- First assess whether enough context remains in the current session to execute safely
-- If context is sufficient: fresh subagent per task + two-stage review
-- If context is insufficient: provide this exact prompt, filled with the actual plan path:
-
-```text
-Use superpowers:subagent-driven-development to implement `<plan-path>`.
-Treat that markdown plan as the authoritative context for this session.
-Before coding, read it critically, extract its tasks into update_plan, confirm you have enough context to execute in this fresh session, dispatch one fresh subagent per task, and ask clarifying questions instead of inventing missing details.
-```
+**If Subagent-Driven chosen:**
+- **REQUIRED SUB-SKILL:** Use $superpower-subagents
+- Fresh subagent per task + two-stage review
 
 **If Inline Execution chosen:**
-- Use inline same-session execution with visible `update_plan`
-- Keep exactly one task `in_progress` at a time
-- Execute sequentially with checkpoints
+- **REQUIRED SUB-SKILL:** Use $superpower-executing-plans
+- Batch execution with checkpoints for review
+
+## Guardrails
+
+- Do not leave architecture, precedence, or validation decisions implicit.
+- Do not write "update X" or "handle errors" without saying how.
+- Keep tasks implementation-sized, not epic-sized.
+- Prefer the minimum viable plan that still prevents guesswork.
+- Exact file paths always.
+- Complete code in every step — if a step changes code, show the code.
+- Exact commands with expected output.
+- DRY, YAGNI, TDD, frequent commits.
+
+## Output Contract
+
+Return a decision-complete plan with:
+
+- `Goal`
+- `Key changes`
+- `Task list`
+- `Verification`
+- `Next skill:` `$superpower-subagents` or `$superpower-executing-plans`

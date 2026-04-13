@@ -1,7 +1,9 @@
 ---
-name: test-driven-development
+name: superpower-tdd
 description: Use when implementing any feature or bugfix, before writing implementation code
 ---
+<!-- Adapted from Claude Code superpowers v5.0.7 for Codex CLI -->
+<!-- Ported from CC superpowers v5.0.7 | Verified: tool mapping, aux inlining, path adaptation | 2026-04-13 -->
 
 # Test-Driven Development (TDD)
 
@@ -46,33 +48,17 @@ Implement fresh from tests. Period.
 
 ## Red-Green-Refactor
 
-```dot
-digraph tdd_cycle {
-    rankdir=LR;
-    red [label="RED\nWrite failing test", shape=box, style=filled, fillcolor="#ffcccc"];
-    verify_red [label="Verify fails\ncorrectly", shape=diamond];
-    green [label="GREEN\nMinimal code", shape=box, style=filled, fillcolor="#ccffcc"];
-    verify_green [label="Verify passes\nAll green", shape=diamond];
-    refactor [label="REFACTOR\nClean up", shape=box, style=filled, fillcolor="#ccccff"];
-    next [label="Next", shape=ellipse];
-
-    red -> verify_red;
-    verify_red -> green [label="yes"];
-    verify_red -> red [label="wrong\nfailure"];
-    green -> verify_green;
-    verify_green -> refactor [label="yes"];
-    verify_green -> green [label="no"];
-    refactor -> verify_green [label="stay\ngreen"];
-    verify_green -> next;
-    next -> red;
-}
+```
+RED ──▶ Verify fails correctly ──▶ GREEN ──▶ Verify passes (all green) ──▶ REFACTOR ──▶ Stay green ──▶ Next
+ ▲         │wrong failure                        │test fails                              │
+ └─────────┘                                     └──────── fix code, not test ────────────┘
 ```
 
 ### RED - Write Failing Test
 
 Write one minimal test showing what should happen.
 
-<Good>
+**Good:**
 ```typescript
 test('retries failed operations 3 times', async () => {
   let attempts = 0;
@@ -88,10 +74,9 @@ test('retries failed operations 3 times', async () => {
   expect(attempts).toBe(3);
 });
 ```
-Clear name, tests real behavior, one thing
-</Good>
+Clear name, tests real behavior, one thing.
 
-<Bad>
+**Bad:**
 ```typescript
 test('retry works', async () => {
   const mock = jest.fn()
@@ -102,8 +87,7 @@ test('retry works', async () => {
   expect(mock).toHaveBeenCalledTimes(3);
 });
 ```
-Vague name, tests mock not code
-</Bad>
+Vague name, tests mock not code.
 
 **Requirements:**
 - One behavior
@@ -131,7 +115,7 @@ Confirm:
 
 Write simplest code to pass the test.
 
-<Good>
+**Good:**
 ```typescript
 async function retryOperation<T>(fn: () => Promise<T>): Promise<T> {
   for (let i = 0; i < 3; i++) {
@@ -144,10 +128,9 @@ async function retryOperation<T>(fn: () => Promise<T>): Promise<T> {
   throw new Error('unreachable');
 }
 ```
-Just enough to pass
-</Good>
+Just enough to pass.
 
-<Bad>
+**Bad:**
 ```typescript
 async function retryOperation<T>(
   fn: () => Promise<T>,
@@ -160,8 +143,7 @@ async function retryOperation<T>(
   // YAGNI
 }
 ```
-Over-engineered
-</Bad>
+Over-engineered.
 
 Don't add features, refactor other code, or "improve" beyond the test.
 
@@ -223,15 +205,13 @@ Manual testing is ad-hoc. You think you tested everything but:
 - Easy to forget cases under pressure
 - "It worked when I tried it" ≠ comprehensive
 
-Automated tests are systematic. They run the same way every time.
-
 **"Deleting X hours of work is wasteful"**
 
 Sunk cost fallacy. The time is already gone. Your choice now:
 - Delete and rewrite with TDD (X more hours, high confidence)
 - Keep it and add tests after (30 min, low confidence, likely bugs)
 
-The "waste" is keeping code you can't trust. Working code without real tests is technical debt.
+The "waste" is keeping code you can't trust.
 
 **"TDD is dogmatic, being pragmatic means adapting"**
 
@@ -241,17 +221,11 @@ TDD IS pragmatic:
 - Documents behavior (tests show how to use code)
 - Enables refactoring (change freely, tests catch breaks)
 
-"Pragmatic" shortcuts = debugging in production = slower.
-
 **"Tests after achieve the same goals - it's spirit not ritual"**
 
 No. Tests-after answer "What does this do?" Tests-first answer "What should this do?"
 
-Tests-after are biased by your implementation. You test what you built, not what's required. You verify remembered edge cases, not discovered ones.
-
-Tests-first force edge case discovery before implementing. Tests-after verify you remembered everything (you didn't).
-
-30 minutes of tests after ≠ TDD. You get coverage, lose proof tests work.
+Tests-after are biased by your implementation. You test what you built, not what's required. 30 minutes of tests after ≠ TDD.
 
 ## Common Rationalizations
 
@@ -348,18 +322,101 @@ Can't check all boxes? You skipped TDD. Start over.
 | Must mock everything | Code too coupled. Use dependency injection. |
 | Test setup huge | Extract helpers. Still complex? Simplify design. |
 
+## Testing Anti-Patterns
+
+### Anti-Pattern 1: Testing Mock Behavior
+
+**Bad:**
+```typescript
+test('renders sidebar', () => {
+  render(<Page />);
+  expect(screen.getByTestId('sidebar-mock')).toBeInTheDocument();
+});
+```
+
+You're verifying the mock works, not that the component works. **Test real component or don't mock it.**
+
+Gate: Before asserting on any mock element, ask "Am I testing real component behavior or just mock existence?" If mock existence → STOP, delete the assertion.
+
+### Anti-Pattern 2: Test-Only Methods in Production
+
+**Bad:** Adding `destroy()` to a production class that's only called in tests.
+
+**Fix:** Put cleanup in test utilities, not production code.
+
+Gate: Before adding any method to production class, ask "Is this only used by tests?" If yes → STOP, put it in test utilities.
+
+### Anti-Pattern 3: Mocking Without Understanding
+
+**Bad:** Over-mocking "to be safe" that breaks the side effect your test depends on.
+
+**Fix:** Understand dependencies first. Mock at the lowest level that preserves the behavior your test needs.
+
+Gate: Before mocking any method:
+1. What side effects does the real method have?
+2. Does this test depend on any of those side effects?
+3. If yes → mock at lower level or use test doubles that preserve necessary behavior
+
+### Anti-Pattern 4: Incomplete Mocks
+
+**Bad:** Partial mocks that only include fields you think you need, missing fields downstream code uses.
+
+**Fix:** Mirror real API completeness. Mock the COMPLETE data structure as it exists in reality.
+
+### Anti-Pattern 5: Integration Tests as Afterthought
+
+Testing is part of implementation, not optional follow-up. TDD prevents this by definition.
+
+### When Mocks Become Too Complex
+
+**Warning signs:**
+- Mock setup longer than test logic
+- Mocking everything to make test pass
+- Mocks missing methods real components have
+- Test breaks when mock changes
+
+**Consider:** Integration tests with real components are often simpler than complex mocks. If you're mocking "just to be safe" or your mock setup is >50% of the test, question whether you need mocks at all.
+
+### Quick Reference
+
+| Anti-Pattern | Fix |
+|--------------|-----|
+| Assert on mock elements | Test real component or unmock it |
+| Test-only methods in production | Move to test utilities |
+| Mock without understanding | Understand dependencies first, mock minimally |
+| Incomplete mocks | Mirror real API completely |
+| Tests as afterthought | TDD - tests first |
+| Over-complex mocks | Consider integration tests |
+
+**Mock-specific red flags:**
+- Assertion checks for `*-mock` test IDs
+- Methods only called in test files
+- Mock setup is >50% of test
+- Test fails when you remove mock
+- Can't explain why mock is needed
+- Mocking "just to be safe"
+
 ## Debugging Integration
 
 Bug found? Write failing test reproducing it. Follow TDD cycle. Test proves fix and prevents regression.
 
 Never fix bugs without a test.
 
-## Testing Anti-Patterns
+## Guardrails
 
-When adding mocks or test utilities, read @testing-anti-patterns.md to avoid common pitfalls:
-- Testing mock behavior instead of real behavior
-- Adding test-only methods to production classes
-- Mocking without understanding dependencies
+- Do not write or expand production code before a failing test exists.
+- Do not treat a passing test written after the code as proof.
+- Do not broaden the implementation beyond what the current failing test requires.
+- When no automated test harness exists, stop and decide with the user whether to add one.
+
+## Output Contract
+
+Return:
+
+- `Failing proof:` the test or check that reproduced the issue
+- `Minimal change:` what code was added to pass it
+- `Green proof:` the command or observation that passed
+- `Next skill:` usually `$superpower-review` or `$superpower-verification`
 
 ## Final Rule
 
