@@ -20,6 +20,8 @@ const SKILL_PATTERNS = [
 
 const PIPELINE_COMMAND_PATTERNS = [
   /^\/pipeline\b/i,
+  /^#plugin\s+pipeline-orchestrator-for-codex(?=$|[\s,.;:!?])/i,
+  /^#plugin\s+pipeline\s+orchestrator(?:\s+for\s+codex)?(?=$|[\s,.;:!?])/i,
 ];
 
 const IMPLEMENTATION_PATTERNS = [
