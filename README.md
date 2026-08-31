@@ -111,11 +111,11 @@ codex-global/agents/
    cd Codex-superpower
    ```
 
-2. **Register skills in Codex environment:**
+2. **Link skills into Codex configuration:**
    ```bash
-   npm install
-   # Or link hooks into your Codex configuration
-   npm run setup
+   # Copy skills and agent prompts directly into your Codex directory
+   mkdir -p ~/.codex/skills
+   cp -r skills/* ~/.codex/skills/
    ```
 
 3. **Verify installation:**
